@@ -1,5 +1,5 @@
 // Importing the modules
-import Forbidden from "../errors/forbbidon.error.js";
+import Forbidden from "../errors/forbidden.error";
 
 // function to authorize the middleware
 function authorize(...roles) {

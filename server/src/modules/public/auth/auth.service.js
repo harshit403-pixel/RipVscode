@@ -172,10 +172,12 @@ async refreshService(
       userId
     );
 
-  session.refreshToken =
-    newRefreshToken;
+  session.refreshToken = newRefreshToken;
+session.expiresAt = new Date(
+  Date.now() + 7 * 24 * 60 * 60 * 1000
+);
 
-  await session.save();
+await session.save();
 
   const user =
     await this.userRepository.getUserById(
