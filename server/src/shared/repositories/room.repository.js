@@ -48,6 +48,13 @@ class RoomRepository {
       }
     );
   }
+//   find room to join
+  async findRoomByCode(roomCode) {
+  return this.roomModel.findOne({
+    roomCode,
+    isActive: true,
+  });
+}
 }
 
 export default RoomRepository;

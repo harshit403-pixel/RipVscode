@@ -4,6 +4,7 @@ import applySecurityMiddlewares from "./shared/middlewares/security.middleware.j
 import globalErrorHandler from "./shared/middlewares/error.middleware.js";
 
 import authRoutes from "./modules/public/auth/auth.router.js";
+import roomRoutes from "./modules/private/room/room.routes.js";
 
 const app = express();
 
@@ -17,6 +18,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use(
+  "/api/rooms",
+  roomRoutes
+);
 
 app.use(globalErrorHandler);
 
