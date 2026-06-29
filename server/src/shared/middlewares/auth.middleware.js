@@ -1,31 +1,38 @@
-// Importing modules
-import { decodeAccessToken } from '../utils/token.util.js';
-import Unauthorized from '../errors/unauthorized.error.js';
+import { decodeAccessToken } from "../utils/token.util.js";
+import Unauthorized from "../errors/unauthorize.error.js";
 
-// making the auth middleware to authenticate the user
-function authMiddleware(req, res, next) {
+function authMiddleware(
+  req,
+  res,
+  next
+) {
+  const authHeader =
+    req.headers.authorization;
 
-    // checking if bearer token is present in the header or not
-    const authHeader = req.headers['authorization'];
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new Unauthorized("User Unauthenticated");
-    }
+  if (
+    !authHeader ||
+    !authHeader.startsWith("Bearer ")
+  ) {
+    throw new Unauthorized(
+      "User unauthenticated"
+    );
+  }
 
-    // getting the token from the header
-    const token = authHeader.split(' ')[1];
+  const token =
+    authHeader.split(" ")[1];
 
-    // verifying the token
-    const decoded = decodeAccessToken(token);
+  const decoded =
+    decodeAccessToken(token);
 
-    if (decoded == null) {
-        throw new Unauthorized("User Unauthenticated");
-    }
+  if (!decoded) {
+    throw new Unauthorized(
+      "Invalid access token"
+    );
+  }
 
-    // setting the user in the request object
-    req.user = decoded;
+  req.user = decoded;
 
-    next();
+  next();
 }
 
 export default authMiddleware;
