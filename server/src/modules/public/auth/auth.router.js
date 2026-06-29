@@ -1,3 +1,4 @@
+// Importing modules
 import express from "express";
 import AuthController from "./auth.controller.js";
 
@@ -11,12 +12,13 @@ import {
   loginValidator,
 } from "./auth.validators.js";
 
-const router =
-  express.Router();
+// Creating the express router
+const router = express.Router();
 
-const authController =
-  new AuthController();
+// Creating the auth controller instance
+const authController = new AuthController();
 
+// Route to register a new user
 router.post(
   "/signup",
   signupValidator,
@@ -26,6 +28,7 @@ router.post(
   )
 );
 
+// Route to login an existing user
 router.post(
   "/login",
   loginValidator,
@@ -35,6 +38,7 @@ router.post(
   )
 );
 
+// Route to get the currently authenticated user's details
 router.get(
   "/me",
   authMiddleware,
@@ -43,6 +47,7 @@ router.get(
   )
 );
 
+// Route to generate a new access token using the refresh token
 router.post(
   "/refresh",
   getRefreshToken,
@@ -51,6 +56,7 @@ router.post(
   )
 );
 
+// Route to logout the user and invalidate the current session
 router.post(
   "/logout",
   authMiddleware,
@@ -60,4 +66,5 @@ router.post(
   )
 );
 
+// Exporting the auth router
 export default router;

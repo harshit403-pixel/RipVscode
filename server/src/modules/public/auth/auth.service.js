@@ -1,3 +1,4 @@
+// Importing modules
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -12,8 +13,10 @@ import Conflict from "../../../shared/errors/conflict.error.js";
 import NotFound from "../../../shared/errors/notfound.error.js";
 import Unauthorized from "../../../shared/errors/unauthorize.error.js";
 
+// Class to handle all business logic related to authentication
 class AuthService {
   constructor() {
+    // Creating repository instances
     this.userRepository =
       new UserRepository();
 
@@ -21,11 +24,13 @@ class AuthService {
       new SessionRepository();
   }
 
+  // Service to register a new user
   async signupService(
     username,
     email,
     password
   ) {
+    // Checking if the user already exists
     const existingUser =
       await this.userRepository.findUserByEmail(
         email
@@ -37,6 +42,7 @@ class AuthService {
       );
     }
 
+    // Creating a new user
     const user =
       await this.userRepository.createUser({
         username,
@@ -44,18 +50,22 @@ class AuthService {
         password,
       });
 
+    // Generating access token
     const accessToken =
       generateAccessToken(user);
 
+    // Generating a session id
     const sessionId =
       this.sessionRepository.getSessionId();
 
+    // Generating refresh token
     const refreshToken =
       generateRefreshToken(
         sessionId,
         user._id
       );
 
+    // Creating a session in the database
     await this.sessionRepository.createSession(
       {
         _id: sessionId,
@@ -64,6 +74,7 @@ class AuthService {
       }
     );
 
+    // Sanitizing user data before sending to the client
     const sanitizedUser =
       sanitizeUser(
         user,
@@ -76,10 +87,12 @@ class AuthService {
     };
   }
 
+  // Service to login an existing user
   async loginService(
     email,
     password
   ) {
+    // Finding the user by email
     const user =
       await this.userRepository.findUserByEmail(
         email
@@ -91,6 +104,7 @@ class AuthService {
       );
     }
 
+    // Comparing the passwords
     const isPasswordValid =
       await user.comparePassword(
         password
@@ -102,18 +116,22 @@ class AuthService {
       );
     }
 
+    // Generating access token
     const accessToken =
       generateAccessToken(user);
 
+    // Generating session id
     const sessionId =
       this.sessionRepository.getSessionId();
 
+    // Generating refresh token
     const refreshToken =
       generateRefreshToken(
         sessionId,
         user._id
       );
 
+    // Creating a session in the database
     await this.sessionRepository.createSession(
       {
         _id: sessionId,
@@ -122,6 +140,7 @@ class AuthService {
       }
     );
 
+    // Sanitizing user data
     const sanitizedUser =
       sanitizeUser(
         user,
@@ -134,11 +153,13 @@ class AuthService {
     };
   }
 
+  // Service to logout the current session
   async logoutService(
     userId,
     refreshToken,
     sessionId
   ) {
+    // Deleting the current session
     await this.sessionRepository.deleteSessions(
       {
         userId,
@@ -148,72 +169,93 @@ class AuthService {
     );
   }
 
-async refreshService(
-  userId,
-  refreshToken,
-  sessionId
-) {
-  const session =
-    await this.sessionRepository.findOneSession({
-      userId,
-      refreshToken,
-      _id: sessionId,
-    });
+  // Service to refresh access and refresh tokens
+  async refreshService(
+    userId,
+    refreshToken,
+    sessionId
+  ) {
+    // Finding the session
+    const session =
+      await this.sessionRepository.findOneSession(
+        {
+          userId,
+          refreshToken,
+          _id: sessionId,
+        }
+      );
 
-  if (!session) {
-    throw new Unauthorized(
-      "Invalid refresh token"
-    );
-  }
+    if (!session) {
+      throw new Unauthorized(
+        "Invalid refresh token"
+      );
+    }
 
-  const newRefreshToken =
-    generateRefreshToken(
-      sessionId,
-      userId
-    );
+    // Generating a new refresh token
+    const newRefreshToken =
+      generateRefreshToken(
+        sessionId,
+        userId
+      );
 
-  session.refreshToken = newRefreshToken;
-session.expiresAt = new Date(
-  Date.now() + 7 * 24 * 60 * 60 * 1000
-);
+    // Updating session data
+    session.refreshToken =
+      newRefreshToken;
 
-await session.save();
+    // Extending session expiry by another 7 days
+    session.expiresAt =
+      new Date(
+        Date.now() +
+          7 *
+            24 *
+            60 *
+            60 *
+            1000
+      );
 
-  const user =
-    await this.userRepository.getUserById(
-      userId
-    );
+    await session.save();
 
-  if (!user) {
-    throw new NotFound(
-      "User not found"
-    );
-  }
-
-  const newAccessToken =
-    generateAccessToken(user);
-
-  return {
-    newAccessToken,
-    newRefreshToken,
-  };
-}
-
-  async getMeService(userId) {
+    // Fetching user details
     const user =
       await this.userRepository.getUserById(
         userId
       );
- 
+
     if (!user) {
       throw new NotFound(
         "User not found"
       );
     }
 
+    // Generating new access token
+    const newAccessToken =
+      generateAccessToken(user);
+
+    return {
+      newAccessToken,
+      newRefreshToken,
+    };
+  }
+
+  // Service to get the currently logged-in user
+  async getMeService(userId) {
+    // Finding the user
+    const user =
+      await this.userRepository.getUserById(
+        userId
+      );
+
+    if (!user) {
+      throw new NotFound(
+        "User not found"
+      );
+    }
+
+    // Generating access token
     const accessToken =
       generateAccessToken(user);
 
+    // Sanitizing user data
     const sanitizedUser =
       sanitizeUser(
         user,
@@ -224,4 +266,5 @@ await session.save();
   }
 }
 
+// Exporting the service
 export default AuthService;
