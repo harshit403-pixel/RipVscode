@@ -25,11 +25,20 @@ class ParticipantRepository {
   }
 
   // Find all participants in room
-  async findParticipants(roomId) {
-    return this.participantModel.find({
-      roomId,
-    });
+  async findParticipants(
+  roomId,
+  onlineOnly = false
+) {
+  const filter = { roomId };
+
+  if (onlineOnly) {
+    filter.isOnline = true;
   }
+
+  return this.participantModel.find(
+    filter
+  );
+}
 
   // Update participant
   async updateParticipant(
@@ -60,6 +69,28 @@ class ParticipantRepository {
       }
     );
   }
+
+  // Find participant by room and user
+async findParticipantByRoomAndUser(
+  roomId,
+  userId
+) {
+  return this.participantModel.findOne({
+    roomId,
+    userId,
+  });
+}
+
+// Find participant by room and name
+async findParticipantByRoomAndName(
+  roomId,
+  displayName
+) {
+  return this.participantModel.findOne({
+    roomId,
+    displayName,
+  });
+}
 }
 
 export default ParticipantRepository;
