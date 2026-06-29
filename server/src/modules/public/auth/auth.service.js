@@ -13,6 +13,7 @@ import Conflict from "../../../shared/errors/conflict.error.js";
 import NotFound from "../../../shared/errors/notfound.error.js";
 import Unauthorized from "../../../shared/errors/unauthorize.error.js";
 
+
 // Class to handle all business logic related to authentication
 class AuthService {
   constructor() {
