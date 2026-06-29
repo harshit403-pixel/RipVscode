@@ -8,29 +8,39 @@ class ParticipantService {
   }
 
   async updateParticipantService(
-    participantId,
-    data
-  ) {
-    const participant =
-      await this.participantRepository.findParticipant(
-        {
-          _id: participantId,
-        }
-      );
+  participantId,
+  data
+) {
+  const participant =
+    await this.participantRepository.findParticipant({
+      _id: participantId,
+    });
 
-    if (!participant) {
-      throw new NotFound(
-        "Participant not found"
-      );
-    }
-
-    return this.participantRepository.updateParticipant(
-      {
-        _id: participantId,
-      },
-      data
+  if (!participant) {
+    throw new NotFound(
+      "Participant not found"
     );
   }
+
+  const updateData = {};
+
+if (data.isOnline !== undefined) {
+  updateData.isOnline =
+    data.isOnline;
+}
+
+if (data.socketId !== undefined) {
+  updateData.socketId =
+    data.socketId;
+}
+
+  return this.participantRepository.updateParticipant(
+    {
+      _id: participantId,
+    },
+    updateData
+  );
+}
 }
 
 export default ParticipantService;
