@@ -2,20 +2,20 @@ function registerRoomEvents(
   io,
   socket
 ) {
-  socket.on(
-    "join-room",
-    ({
-      roomCode,
-      participant,
-    }) => {
-      socket.join(roomCode);
+socket.on(
+  "join-room",
+  ({
+    roomCode,
+    participantId,
+  }) => {
+    socket.join(roomCode);
 
-      socket.to(roomCode).emit(
-        "participant-joined",
-        participant
-      );
-    }
-  );
+    socket.to(roomCode).emit(
+      "participant-joined",
+      participantId
+    );
+  }
+);
 
   socket.on(
     "leave-room",
