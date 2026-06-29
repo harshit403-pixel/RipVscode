@@ -61,4 +61,11 @@ router.delete(
     roomController.closeRoomController
   )
 );
+
+router.get(
+  "/:roomCode/participants",
+  asyncHandler(
+    roomController.getParticipantsController
+  )
+);
 export default router;

@@ -120,13 +120,15 @@ async leaveRoomService(
     );
   }
 
-  await this.participantRepository.deleteParticipant(
+  await this.participantRepository.updateParticipant(
     {
       _id: participantId,
+    },
+    {
+      isOnline: false,
+      socketId: null,
     }
   );
-
-  return;
 }
 
 async closeRoomService(
@@ -160,6 +162,28 @@ async closeRoomService(
   await this.participantRepository.deleteParticipants(
     room._id
   );
+}
+
+async getParticipantsService(
+  roomCode
+) {
+  const room =
+    await this.roomRepository.findRoomByCode(
+      roomCode
+    );
+
+  if (!room) {
+    throw new NotFound(
+      "Room not found"
+    );
+  }
+
+  const participants =
+    await this.participantRepository.findParticipants(
+      room._id
+    );
+
+  return participants;
 }
 }
 

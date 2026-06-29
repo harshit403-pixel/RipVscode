@@ -108,6 +108,25 @@ class RoomController {
       "Room closed successfully"
     );
   };
+
+
+  getParticipantsController =
+  async (req, res) => {
+    const { roomCode } =
+      req.params;
+
+    const participants =
+      await this.roomService.getParticipantsService(
+        roomCode
+      );
+
+    return ApiResponse(
+      res,
+      200,
+      "Participants fetched successfully",
+      participants
+    );
+  };
 }
 
 export default RoomController;
