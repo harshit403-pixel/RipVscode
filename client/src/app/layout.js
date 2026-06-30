@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "CodeRoom",
+  title: "RipVSCode",
   description: "Real-time collaborative code editor",
 };
 
