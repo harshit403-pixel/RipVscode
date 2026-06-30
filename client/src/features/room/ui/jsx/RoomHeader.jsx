@@ -1,17 +1,13 @@
 import {
   Copy,
-  Lock,
-  Unlock,
   UserPlus,
   LogOut,
-  Code,
   Code2,
 } from "lucide-react";
 import styles from "../css/RoomPage.module.css";
 
 export default function RoomHeader({
   roomCode = "room-7f3g2k",
-  isLocked = false,
   onCopy = () => {},
   onShare = () => {},
   onLeave = () => {},
@@ -37,20 +33,6 @@ export default function RoomHeader({
           >
             <Copy size={14} />
           </button>
-        </div>
-
-        <div className={styles.lockBadge}>
-          {isLocked ? (
-            <>
-              <Lock size={14} />
-              <span>Locked</span>
-            </>
-          ) : (
-            <>
-              <Unlock size={14} />
-              <span>Unlocked</span>
-            </>
-          )}
         </div>
       </div>
 

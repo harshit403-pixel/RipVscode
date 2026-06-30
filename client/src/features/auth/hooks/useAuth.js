@@ -72,10 +72,18 @@ export function useAuth(mode = "login") {
 
       router.push("/create-room");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Something went wrong. Please try again."
-      );
+      const message =
+        err.response?.data?.message;
+
+      if (message) {
+        setError(message);
+      } else if (err.response?.status === 401) {
+        setError("Invalid email or password.");
+      } else if (err.response?.status >= 500) {
+        setError("Server error. Please try again later.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

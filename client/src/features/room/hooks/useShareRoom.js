@@ -22,6 +22,17 @@ export const useShareRoom = (roomCode = "room-7f3g2k") => {
     }
   };
 
+  // Copy just the room code (used by the header room-id button).
+  const copyRoomCode = async () => {
+    try {
+      await navigator.clipboard.writeText(roomCode);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.error("Failed to copy room code:", error);
+    }
+  };
+
   const openShare = () => setIsShareOpen(true);
   const closeShare = () => setIsShareOpen(false);
 
@@ -30,6 +41,7 @@ export const useShareRoom = (roomCode = "room-7f3g2k") => {
     isCopied,
     roomLink: getRoomLink(),
     copyRoomLink,
+    copyRoomCode,
     openShare,
     closeShare,
   };

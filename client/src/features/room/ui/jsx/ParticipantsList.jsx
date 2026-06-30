@@ -1,18 +1,16 @@
 import { useState } from "react";
 import {
   X,
-  Crown,
   MoreVertical,
   UserMinus,
   ChevronUp,
   ChevronDown,
   Copy,
-  Lock,
 } from "lucide-react";
 import styles from "../css/RoomPage.module.css";
 
-// Helper function to extract initials
 function getInitials(name) {
+  if (!name) return "??";
   return name
     .split(" ")
     .map((part) => part[0])
@@ -21,20 +19,36 @@ function getInitials(name) {
     .toUpperCase();
 }
 
+function hashCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
+const AVATAR_COLORS = [
+  "#ef4444", "#f97316", "#eab308", "#22c55e",
+  "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
+];
+
+function getAvatarColor(id) {
+  const index = hashCode(id || "") % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
+}
+
 export default function ParticipantsList({
-  participants = [
-    { id: "1", name: "Harsh", role: "HOST", online: true, color: "#0f0f0f" },
-    { id: "2", name: "Arjun", role: "GUEST", online: true, color: "#0f0f0f" },
-    { id: "3", name: "Neha", role: "GUEST", online: true, color: "#0f0f0f" },
-  ],
-  currentUserId = "1",
+  participants = [],
+  currentParticipant = null,
   onKick = () => {},
   onCloseSidebar = () => {},
-  roomCode = "room-7f3g2k",
-  isLocked = false,
+  roomCode = "",
 }) {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(true);
+
+  const currentUserId = currentParticipant?.id || currentParticipant?._id || "";
+  const isHost = currentParticipant?.role === "HOST";
 
   const toggleMenu = (id) => {
     setActiveMenuId(activeMenuId === id ? null : id);
@@ -60,71 +74,76 @@ export default function ParticipantsList({
       {/* Participants List */}
       <div className={styles.participantsList}>
         {participants.map((participant) => {
-          const isHost = participant.role === "HOST";
-          const isMe = participant.id === currentUserId;
-          const showMenu = activeMenuId === participant.id;
+          const pid = participant.id || participant._id;
+          const isParticipantHost = participant.role === "HOST";
+          const isMe = pid === currentUserId;
+          const showMenu = activeMenuId === pid;
+          const canKick = isHost && !isMe && !isParticipantHost;
 
           return (
-            <div className={styles.participantCard} key={participant.id}>
+            <div className={styles.participantCard} key={pid}>
               <div className={styles.participantLeft}>
                 <div
                   className={styles.avatar}
-                  style={{ backgroundColor: participant.color || "#000000" }}
+                  style={{ backgroundColor: getAvatarColor(pid) }}
                 >
-                  {getInitials(participant.name)}
+                  {getInitials(participant.displayName)}
                 </div>
 
                 <div className={styles.participantDetails}>
                   <div className={styles.nameRow}>
                     <span>
-                      {participant.name}
+                      {participant.displayName}
                       {isMe ? " (You)" : ""}
                     </span>
-                    {isHost && <span className={styles.hostBadge}>(host)</span>}
+                    {isParticipantHost && (
+                      <span className={styles.hostBadge}>(host)</span>
+                    )}
                   </div>
                   <div className={styles.statusRow}>
                     <span
                       className={styles.presenceDot}
                       style={{
-                        backgroundColor: participant.online
+                        backgroundColor: participant.isOnline
                           ? "var(--accent)"
                           : "#cbd5e1",
                       }}
                     />
                     <span className={styles.statusText}>
-                      {participant.online ? "Online" : "Offline"}
+                      {participant.isOnline ? "Online" : "Offline"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Action menu for host / guests */}
-              <div className={styles.actionsColumn}>
-                <button
-                  className={styles.menuBtn}
-                  onClick={() => toggleMenu(participant.id)}
-                  type="button"
-                  aria-label="Toggle menu"
-                >
-                  <MoreVertical size={16} />
-                </button>
+              {canKick && (
+                <div className={styles.actionsColumn}>
+                  <button
+                    className={styles.menuBtn}
+                    onClick={() => toggleMenu(pid)}
+                    type="button"
+                    aria-label="Toggle menu"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
 
-                {showMenu && (
-                  <div className={styles.popoverMenu}>
-                    <button
-                      className={styles.popoverItem}
-                      onClick={() => {
-                        onKick(participant.id);
-                        setActiveMenuId(null);
-                      }}
-                      type="button"
-                    >
-                      <UserMinus size={14} />
-                      <span>Kick Participant</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+                  {showMenu && (
+                    <div className={styles.popoverMenu}>
+                      <button
+                        className={styles.popoverItem}
+                        onClick={() => {
+                          onKick(pid);
+                          setActiveMenuId(null);
+                        }}
+                        type="button"
+                      >
+                        <UserMinus size={14} />
+                        <span>Kick Participant</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
@@ -153,20 +172,6 @@ export default function ParticipantsList({
                   </button>
                 </span>
               </div>
-
-              <div className={styles.settingRow}>
-                <span className={styles.settingLabelWithIcon}>
-                  <Lock size={13} />
-                  Lock Room
-                </span>
-                <span className={styles.settingValue}>
-                  {isLocked ? "Locked" : "Unlocked"}
-                </span>
-              </div>
-
-              <button className={styles.btnBlock} type="button">
-                Lock Room with Password
-              </button>
             </div>
           </div>
         )}

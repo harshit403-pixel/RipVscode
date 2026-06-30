@@ -88,19 +88,6 @@
   color: var(--text);
 }
 
-.lockBadge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 12px;
-  background: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text);
-}
-
 .rightHeader {
   display: flex;
   align-items: center;
@@ -417,36 +404,12 @@
   font-weight: 500;
 }
 
-.settingLabelWithIcon {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text);
-  font-weight: 500;
-}
-
 .settingValue {
   color: var(--muted);
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.btnBlock {
-  width: 100%;
-  background: var(--primary-btn);
-  border: 1px solid var(--primary-btn);
-  color: #ffffff;
-  border-radius: 6px;
-  padding: 10px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.btnBlock:hover {
-  background: var(--primary-btn-hover);
-  border-color: var(--primary-btn-hover);
 }
 
 /* Footer Status Bar */

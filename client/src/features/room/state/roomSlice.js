@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  roomDetails: null, // { _id, roomCode, roomName, hostId }
-  participants: [], // [ { _id, displayName, role, isOnline, socketId } ]
-  currentParticipant: null, // Your own participant details: { _id, displayName, role }
+  roomDetails: null, // { id, roomCode, roomName, hostId }
+  participants: [], // [ { id, displayName, role, isOnline, socketId } ]
+  currentParticipant: null, // Your own participant: { id, displayName, role }
   typingUsers: {}, // { [participantId]: boolean }
   loading: false,
   error: null,
@@ -18,31 +18,29 @@ const roomSlice = createSlice({
       state.participants = action.payload.participants;
       state.currentParticipant = action.payload.currentParticipant;
     },
-    clearRoom: (state) => {
-      return initialState;
-    },
+    clearRoom: () => initialState,
+
     // Handles live socket join updates
     addParticipant: (state, action) => {
-      const exists = state.participants.find(
-        (p) => p._id === action.payload._id,
-      );
+      const payload = action.payload;
+      const pid = payload._id || payload.id;
+      const exists = state.participants.find((p) => (p._id || p.id) === pid);
       if (exists) {
         exists.isOnline = true;
-        exists.socketId = action.payload.socketId;
+        exists.socketId = payload.socketId;
       } else {
-        state.participants.push(action.payload);
+        state.participants.push(payload);
       }
     },
+
     // Handles live socket leave/disconnect updates
     removeParticipant: (state, action) => {
-      const participant = state.participants.find(
-        (p) => p._id === action.payload,
+      const pid = action.payload;
+      state.participants = state.participants.filter(
+        (p) => (p._id || p.id) !== pid
       );
-      if (participant) {
-        participant.isOnline = false;
-        participant.socketId = null;
-      }
     },
+
     // Updates typing indicators
     setTypingStatus: (state, action) => {
       const { participantId, isTyping } = action.payload;

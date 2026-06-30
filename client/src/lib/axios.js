@@ -52,9 +52,17 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     // Handle 401: attempt token refresh then retry original request once.
+    // Skip refresh for auth endpoints — they return 401 for invalid credentials,
+    // not because the token expired.
+    const isAuthEndpoint = originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/signup") ||
+      originalRequest.url?.includes("/auth/register") ||
+      originalRequest.url?.includes("/auth/refresh");
+
     if (
       error.response?.status === 401 &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isAuthEndpoint
     ) {
       // If a refresh is already in flight, queue this request until it resolves.
       if (isRefreshing) {

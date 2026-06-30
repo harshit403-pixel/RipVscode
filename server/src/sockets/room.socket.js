@@ -1,7 +1,15 @@
-function registerRoomEvents(io, socket, { roomLifecycleService }) {
+function registerRoomEvents(io, socket, { roomLifecycleService, roomDAO, participantDAO }) {
   // Handle a participant joining a room.
   socket.on("join-room", async ({ roomCode, participant }) => {
-    const participantId = participant._id;
+    if (!participant || (!participant._id && !participant.id)) {
+      socket.emit("room-error", {
+        message: "Invalid participant data.",
+      });
+      return;
+    }
+
+    const participantId = participant._id || participant.id;
+
     try {
       // Join the socket.io room channel.
       socket.join(roomCode);
@@ -65,6 +73,66 @@ function registerRoomEvents(io, socket, { roomLifecycleService }) {
     } catch (error) {
       // Log disconnect cleanup failures without affecting other sockets.
       console.error("Disconnect cleanup failed:", error.message);
+    }
+  });
+
+  // Handle the host ending the session for everyone in the room.
+  socket.on("end-session", async ({ roomCode, hostName }) => {
+    try {
+      // Close the room in storage and evict it from memory.
+      await roomLifecycleService.closeRoom(roomCode);
+
+      // Notify the other participants that the host ended the session.
+      socket.to(roomCode).emit("room-closed", { hostName });
+    } catch (error) {
+      // Report the failure back to the host.
+      socket.emit("room-error", {
+        message: error.message,
+      });
+    }
+  });
+
+  // Handle a host kicking a participant from the room.
+  socket.on("kick-participant", async ({ roomCode, hostParticipantId, targetParticipantId }) => {
+    try {
+      const room = await roomDAO.findRoomByCode(roomCode);
+      if (!room) {
+        socket.emit("room-error", { message: "Room not found." });
+        return;
+      }
+
+      const kicker = await participantDAO.findParticipant({ _id: hostParticipantId, roomId: room._id });
+      if (!kicker || kicker.role !== "HOST") {
+        socket.emit("room-error", { message: "Only the host can kick participants." });
+        return;
+      }
+
+      if (hostParticipantId === targetParticipantId) {
+        socket.emit("room-error", { message: "Host cannot kick themselves." });
+        return;
+      }
+
+      const target = await participantDAO.findParticipant({ _id: targetParticipantId, roomId: room._id });
+      if (!target) {
+        socket.emit("room-error", { message: "Participant not found." });
+        return;
+      }
+
+      await participantDAO.deleteParticipant({ _id: targetParticipantId });
+
+      const targetSocketId = target.socketId;
+      if (targetSocketId) {
+        const targetSocket = io.sockets.sockets.get(targetSocketId);
+        if (targetSocket) {
+          targetSocket.emit("participant-kicked", { roomCode });
+          targetSocket.leave(roomCode);
+          targetSocket.disconnect(true);
+        }
+      }
+
+      socket.to(roomCode).emit("participant-left", { participantId: targetParticipantId });
+    } catch (error) {
+      socket.emit("room-error", { message: error.message });
     }
   });
 }

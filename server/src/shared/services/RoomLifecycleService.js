@@ -98,6 +98,16 @@ class RoomLifecycleService {
 
     }
 
+    async closeRoom(roomCode) {
+
+        // Mark the room inactive so its link can no longer be joined.
+        await this.roomDAO.updateRoom({ roomCode }, { isActive: false });
+
+        // Flush any unsaved edits and free the in-memory room.
+        await this.unloadRoom(roomCode);
+
+    }
+
 }
 
 export default RoomLifecycleService;

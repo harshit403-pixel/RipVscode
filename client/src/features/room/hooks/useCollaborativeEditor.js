@@ -5,12 +5,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { socket } from "@/lib/socket";
 import { getRoom } from "../api/room.api";
-import { setRoom, clearRoom } from "../state/roomSlice";
+import {
+  setRoom,
+  clearRoom,
+  addParticipant,
+  removeParticipant,
+} from "../state/roomSlice";
 import { createDeltaFromChange, deltaToMonacoOperation } from "../lib/delta";
 
 // Coordinates the realtime collaboration session for a room:
-// loads the initial document, resolves this client's identity, and manages
-// the Socket.IO connection lifecycle. Editing sync is wired in later commits.
+// loads the initial document, resolves this client's identity, manages the
+// Socket.IO connection, applies remote edits, and tracks presence and closure.
 export function useCollaborativeEditor(roomCode) {
 
   const dispatch = useDispatch();
@@ -22,6 +27,10 @@ export function useCollaborativeEditor(roomCode) {
 
   // Connection status for diagnostics and future UI wiring.
   const [status, setStatus] = useState("connecting");
+
+  // Set when the host ends the session, with the host's display name.
+  const [roomClosed, setRoomClosed] = useState(false);
+  const [closedBy, setClosedBy] = useState("");
 
   // Refs that must stay current without re-running the connection effect.
   const editorRef = useRef(null);
@@ -70,6 +79,34 @@ export function useCollaborativeEditor(roomCode) {
         socket.emit("code-change", { roomCode, delta });
         versionRef.current += 1;
       }
+    });
+  }, [roomCode]);
+
+  // Leave the room; the host additionally ends the session for everyone else.
+  const leaveRoom = useCallback(() => {
+    const participant = participantRef.current;
+
+    // A host leaving ends the session and closes the room for all guests.
+    if (participant?.role === "HOST") {
+      socket.emit("end-session", {
+        roomCode,
+        hostName: participant.displayName,
+      });
+    }
+
+    // Navigate home; the effect cleanup emits leave-room and disconnects.
+    router.push("/");
+  }, [roomCode, router]);
+
+  // Kick a participant from the room (host only).
+  const kickParticipant = useCallback((targetParticipantId) => {
+    const me = participantRef.current;
+    if (!me || me.role !== "HOST") return;
+
+    socket.emit("kick-participant", {
+      roomCode,
+      hostParticipantId: me.id || me._id,
+      targetParticipantId,
     });
   }, [roomCode]);
 
@@ -132,6 +169,32 @@ export function useCollaborativeEditor(roomCode) {
       versionRef.current = version;
     };
 
+    // Add a participant to the presence list when they join.
+    const handleParticipantJoined = (participant) => {
+      if (participant?.id || participant?._id) {
+        dispatch(addParticipant(participant));
+      }
+    };
+
+    // Mark a participant offline when they leave.
+    const handleParticipantLeft = (payload) => {
+      const participantId = payload?.participantId;
+      if (participantId) {
+        dispatch(removeParticipant(participantId));
+      }
+    };
+
+    // Show the closed-room overlay when the host ends the session.
+    const handleRoomClosed = (payload) => {
+      setRoomClosed(true);
+      setClosedBy(payload?.hostName || "The host");
+    };
+
+    // Redirect home when this participant is kicked by the host.
+    const handleParticipantKicked = () => {
+      router.push("/");
+    };
+
     // Fetch the initial document, then open the socket.
     const start = async () => {
       try {
@@ -140,7 +203,7 @@ export function useCollaborativeEditor(roomCode) {
 
         const data = res.data.data;
 
-        // Resolve this client's participant id by matching the authenticated user.
+        // Resolve this client's participant by matching the authenticated user.
         const me = data.participants.find(
           (participant) => participant.userId === authUserRef.current?.id
         );
@@ -161,7 +224,7 @@ export function useCollaborativeEditor(roomCode) {
         // Load the initial document into local state for Monaco.
         setDocument(data.room.document || "");
       } catch (error) {
-        // A missing or inaccessible room returns the user to the landing page.
+        // A missing, closed or inaccessible room returns the user to the landing page.
         console.error("Failed to load room:", error);
         if (!cancelled) router.push("/");
         return;
@@ -169,11 +232,15 @@ export function useCollaborativeEditor(roomCode) {
 
       if (cancelled) return;
 
-      // Register connection and collaboration listeners, then open the socket.
+      // Register connection, collaboration and presence listeners, then open the socket.
       socket.on("connect", handleConnect);
       socket.on("disconnect", handleDisconnect);
       socket.on("code-change", handleRemoteChange);
       socket.on("sync-required", handleSyncRequired);
+      socket.on("participant-joined", handleParticipantJoined);
+      socket.on("participant-left", handleParticipantLeft);
+      socket.on("participant-kicked", handleParticipantKicked);
+      socket.on("room-closed", handleRoomClosed);
 
       if (socket.connected) {
         handleConnect();
@@ -198,6 +265,10 @@ export function useCollaborativeEditor(roomCode) {
       socket.off("disconnect", handleDisconnect);
       socket.off("code-change", handleRemoteChange);
       socket.off("sync-required", handleSyncRequired);
+      socket.off("participant-joined", handleParticipantJoined);
+      socket.off("participant-left", handleParticipantLeft);
+      socket.off("participant-kicked", handleParticipantKicked);
+      socket.off("room-closed", handleRoomClosed);
 
       if (participantRef.current) {
         socket.emit("leave-room", {
@@ -214,7 +285,11 @@ export function useCollaborativeEditor(roomCode) {
   return {
     document,
     status,
+    roomClosed,
+    closedBy,
     handleEditorMount,
+    leaveRoom,
+    kickParticipant,
   };
 }
 
