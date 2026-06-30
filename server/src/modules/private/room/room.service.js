@@ -1,8 +1,16 @@
 import RoomRepository from "../../../shared/dao/room.dao.js";
 import ParticipantRepository from "../../../shared/dao/participant.dao.js";
+
 import NotFound from "../../../shared/errors/notfound.error.js";
-import generateRoomCode from "../../../shared/utils/roomCode.util.js";
 import Unauthorized from "../../../shared/errors/unauthorize.error.js";
+
+import generateRoomCode from "../../../shared/utils/roomCode.util.js";
+
+import {
+  sanitizeRoom,
+  sanitizeParticipant,
+  sanitizeParticipants,
+} from "../../../shared/utils/sanitizer.util.js";
 
 class RoomService {
   constructor() {
@@ -11,6 +19,23 @@ class RoomService {
 
     this.participantRepository =
       new ParticipantRepository();
+  }
+
+  async getRoomByCode(
+    roomCode
+  ) {
+    const room =
+      await this.roomRepository.findRoomByCode(
+        roomCode
+      );
+
+    if (!room) {
+      throw new NotFound(
+        "Room not found"
+      );
+    }
+
+    return room;
   }
 
   async createRoomService(
@@ -48,144 +73,131 @@ class RoomService {
       }
     );
 
-    return room;
+    return sanitizeRoom(room);
   }
 
   async joinRoomService(
-  roomCode,
-  displayName
-) {
-  const room =
-    await this.roomRepository.findRoomByCode(
-      roomCode
-    );
+    roomCode,
+    displayName
+  ) {
+    const room =
+      await this.getRoomByCode(
+        roomCode
+      );
 
-  if (!room) {
-    throw new NotFound(
-      "Room not found"
+    const participant =
+      await this.participantRepository.createParticipant(
+        {
+          roomId: room._id,
+          displayName,
+          role: "GUEST",
+        }
+      );
+
+    return {
+      room:
+        sanitizeRoom(room),
+      participant:
+        sanitizeParticipant(
+          participant
+        ),
+    };
+  }
+
+  async getRoomService(
+    roomCode
+  ) {
+    const room =
+      await this.getRoomByCode(
+        roomCode
+      );
+
+    const participants =
+      await this.participantRepository.findParticipants(
+        room._id
+      );
+
+    return {
+      room:
+        sanitizeRoom(room),
+      participants:
+        sanitizeParticipants(
+          participants
+        ),
+    };
+  }
+
+  async getParticipantsService(
+    roomCode
+  ) {
+    const room =
+      await this.getRoomByCode(
+        roomCode
+      );
+
+    const participants =
+      await this.participantRepository.findParticipants(
+        room._id
+      );
+
+    return sanitizeParticipants(
+      participants
     );
   }
 
-  const participant =
-    await this.participantRepository.createParticipant(
-      {
-        roomId: room._id,
-        displayName,
-        role: "GUEST",
-      }
-    );
+  async leaveRoomService(
+    participantId
+  ) {
+    const participant =
+      await this.participantRepository.findParticipant(
+        {
+          _id: participantId,
+        }
+      );
 
-  return {
-    participantId:
-      participant._id,
-    room,
-  };
-}
+    if (!participant) {
+      throw new NotFound(
+        "Participant not found"
+      );
+    }
 
-async getRoomService(roomCode) {
-  const room =
-    await this.roomRepository.findRoomByCode(
-      roomCode
-    );
-
-  if (!room) {
-    throw new NotFound(
-      "Room not found"
-    );
-  }
-
-  const participants =
-    await this.participantRepository.findParticipants(
-      room._id
-    );
-
-  return {
-    room,
-    participants,
-  };
-}
-
-async leaveRoomService(
-  participantId
-) {
-  const participant =
-    await this.participantRepository.findParticipant(
+    await this.participantRepository.updateParticipant(
       {
         _id: participantId,
+      },
+      {
+        isOnline: false,
+        socketId: null,
       }
     );
-
-  if (!participant) {
-    throw new NotFound(
-      "Participant not found"
-    );
   }
 
-  await this.participantRepository.updateParticipant(
-    {
-      _id: participantId,
-    },
-    {
-      isOnline: false,
-      socketId: null,
-    }
-  );
-}
-
-async closeRoomService(
-  roomCode,
-  userId
-) {
-  const room =
-    await this.roomRepository.findRoomByCode(
-      roomCode
-    );
-
-  if (!room) {
-    throw new NotFound(
-      "Room not found"
-    );
-  }
-
-  if (
-    room.hostId.toString() !==
+  async closeRoomService(
+    roomCode,
     userId
   ) {
-    throw new Unauthorized(
-      "Only host can close room"
-    );
-  }
+    const room =
+      await this.getRoomByCode(
+        roomCode
+      );
 
-  await this.roomRepository.closeRoom(
-    room._id
-  );
+    if (
+      room.hostId.toString() !==
+      userId
+    ) {
+      throw new Unauthorized(
+        "Only host can close room"
+      );
+    }
 
-  await this.participantRepository.deleteParticipants(
-    room._id
-  );
-}
-
-async getParticipantsService(
-  roomCode
-) {
-  const room =
-    await this.roomRepository.findRoomByCode(
-      roomCode
-    );
-
-  if (!room) {
-    throw new NotFound(
-      "Room not found"
-    );
-  }
-
-  const participants =
-    await this.participantRepository.findParticipants(
+    await this.roomRepository.closeRoom(
       room._id
     );
 
-  return participants;
-}
+    await this.participantRepository.deleteParticipants(
+      room._id
+    );
+  }
 }
 
 export default RoomService;
