@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { socket } from "@/lib/socket";
 import { getRoom } from "../api/room.api";
 import { setRoom, clearRoom } from "../state/roomSlice";
-import { createDeltaFromChange } from "../lib/delta";
+import { createDeltaFromChange, deltaToMonacoOperation } from "../lib/delta";
 
 // Coordinates the realtime collaboration session for a room:
 // loads the initial document, resolves this client's identity, and manages
@@ -26,7 +26,7 @@ export function useCollaborativeEditor(roomCode) {
   // Refs that must stay current without re-running the connection effect.
   const editorRef = useRef(null);
   const monacoRef = useRef(null);
-  const participantIdRef = useRef(null);
+  const participantRef = useRef(null);
   const authUserRef = useRef(authUser);
 
   // Current document version used as the base version for outgoing deltas.
@@ -82,15 +82,54 @@ export function useCollaborativeEditor(roomCode) {
     // Announce presence to the room; re-runs automatically on reconnect.
     const handleConnect = () => {
       setStatus("connected");
-      socket.emit("join-room", {
-        roomCode,
-        participantId: participantIdRef.current,
-      });
+      if (participantRef.current) {
+        socket.emit("join-room", {
+          roomCode,
+          participant: participantRef.current,
+        });
+      }
     };
 
     // Track connection drops for status reporting.
     const handleDisconnect = () => {
       setStatus("disconnected");
+    };
+
+    // Apply a remote edit to Monaco without re-emitting it.
+    const handleRemoteChange = ({ delta, version }) => {
+      const editor = editorRef.current;
+      const model = editor?.getModel();
+      if (!model) return;
+
+      // Suppress the change listener while the remote edit is applied.
+      isApplyingRemoteRef.current = true;
+      try {
+        const operation = deltaToMonacoOperation(delta, model);
+        editor.executeEdits("remote", [operation]);
+      } finally {
+        isApplyingRemoteRef.current = false;
+      }
+
+      // Adopt the authoritative version that produced this edit.
+      versionRef.current = version;
+    };
+
+    // Resynchronize the whole document when the server reports the client is stale.
+    const handleSyncRequired = ({ version, document: latestDocument }) => {
+      const editor = editorRef.current;
+      const model = editor?.getModel();
+      if (!model) return;
+
+      // Replace the model content while suppressing the change listener.
+      isApplyingRemoteRef.current = true;
+      try {
+        model.setValue(latestDocument);
+      } finally {
+        isApplyingRemoteRef.current = false;
+      }
+
+      // Reset to the authoritative version.
+      versionRef.current = version;
     };
 
     // Fetch the initial document, then open the socket.
@@ -105,7 +144,7 @@ export function useCollaborativeEditor(roomCode) {
         const me = data.participants.find(
           (participant) => participant.userId === authUserRef.current?.id
         );
-        participantIdRef.current = me ? me.id : null;
+        participantRef.current = me || null;
 
         // Initialize the base version from the persisted room version.
         versionRef.current = data.room.version ?? 1;
@@ -130,9 +169,11 @@ export function useCollaborativeEditor(roomCode) {
 
       if (cancelled) return;
 
-      // Register connection listeners and open the socket.
+      // Register connection and collaboration listeners, then open the socket.
       socket.on("connect", handleConnect);
       socket.on("disconnect", handleDisconnect);
+      socket.on("code-change", handleRemoteChange);
+      socket.on("sync-required", handleSyncRequired);
 
       if (socket.connected) {
         handleConnect();
@@ -155,11 +196,13 @@ export function useCollaborativeEditor(roomCode) {
 
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
+      socket.off("code-change", handleRemoteChange);
+      socket.off("sync-required", handleSyncRequired);
 
-      if (participantIdRef.current) {
+      if (participantRef.current) {
         socket.emit("leave-room", {
           roomCode,
-          participantId: participantIdRef.current,
+          participantId: participantRef.current.id,
         });
       }
 
