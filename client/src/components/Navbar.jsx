@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { navigate } from "@/lib/navigate";
 
 export default function Navbar() {
   const router = useRouter();
@@ -84,8 +85,8 @@ export default function Navbar() {
       <div className="flex gap-8">
         <button
           onClick={() =>
-            router.push("/login")
-          }
+    navigate(router, "/login")
+  }
           className="
             group
             relative
@@ -105,8 +106,8 @@ export default function Navbar() {
 
         <button
           onClick={() =>
-            router.push("/signup")
-          }
+    navigate(router, "/signup")
+  }
           className="
             group
             relative

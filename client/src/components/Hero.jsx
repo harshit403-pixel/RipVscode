@@ -3,6 +3,7 @@
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Button from "./Button";
+import { navigate } from "@/lib/navigate";
 
 export default function Hero() {
   const router = useRouter();
@@ -73,7 +74,12 @@ export default function Hero() {
 
           <div className=" flex items-center gap-6">
             <Button
-              onClick={handleCreateRoom}
+              onClick={() =>
+  navigate(
+    router,
+    "/signup"
+  )
+}
             >
               Create Room
             </Button>

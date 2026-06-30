@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 
 import { signup } from "@/features/auth/api/auth.api";
 import { setUser } from "@/features/auth/state/authSlice";
+import { navigate } from "@/lib/navigate";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -238,8 +239,8 @@ export default function SignupPage() {
           <span
             className="cursor-pointer underline"
             onClick={() =>
-              router.push("/login")
-            }
+  navigate(router, "/login")
+}
           >
             Login
           </span>
