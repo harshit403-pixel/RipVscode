@@ -10,7 +10,7 @@ config();
 const envSchema = z
   .object({
     PORT: z.coerce.number().default(envsConstants.PORT),
-
+   
     NODE_ENV: z
       .enum(["development", "production", "test"])
       .default(envsConstants.NODE_ENV),
