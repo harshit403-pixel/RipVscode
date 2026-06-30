@@ -1,6 +1,7 @@
 import axios from "axios";
 import { toast } from "react-toastify";
 import store from "./store";
+import { setUser, logoutUser } from "@/features/auth/state/authSlice";
 
 const axiosInstance = axios.create({
   baseURL: "/api",
@@ -29,15 +30,87 @@ axiosInstance.interceptors.request.use(
 // Tracks the active rate-limit countdown timer so only one runs at a time.
 let countdownInterval = null;
 
-// Surface rate-limit responses as a live countdown toast.
+// Token refresh state
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Response interceptor: handle 401 refresh rotation and rate-limit toasts.
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
 
-    // Only handle "Too many requests" responses here.
+    // Handle 401: attempt token refresh then retry original request once.
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      // If a refresh is already in flight, queue this request until it resolves.
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then((token) => {
+          originalRequest.headers.Authorization =
+            `Bearer ${token}`;
+          return axiosInstance(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Use a raw axios call (not the interceptor-bearing instance) so the
+        // refresh request itself is never intercepted or retried.
+        const res = await axios.post(
+          "/api/auth/refresh",
+          null,
+          { withCredentials: true }
+        );
+
+        const newAccessToken =
+          res.data.data.accessToken;
+
+        // Merge the new token into the existing user object in the store.
+        const currentUser =
+          store.getState().auth.user;
+        store.dispatch(
+          setUser({
+            ...currentUser,
+            accessToken: newAccessToken,
+          })
+        );
+
+        // Flush the queue with the fresh token.
+        processQueue(null, newAccessToken);
+
+        // Retry the original request that triggered the 401.
+        originalRequest.headers.Authorization =
+          `Bearer ${newAccessToken}`;
+        return axiosInstance(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed — flush the queue with the error and log the user out.
+        processQueue(refreshError);
+        store.dispatch(logoutUser());
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    // Surface rate-limit responses as a live countdown toast.
     if (error.response?.status === 429) {
-
-      // Extract the retry window (in seconds) from the server message.
       const message =
         error.response.data?.message || "Too many requests";
       const match = message.match(/(\d+)\s*seconds/);
@@ -45,12 +118,10 @@ axiosInstance.interceptors.response.use(
       if (match) {
         let remaining = parseInt(match[1], 10);
 
-        // Reset any previous countdown before starting a new one.
         if (countdownInterval) {
           clearInterval(countdownInterval);
         }
 
-        // Show the initial rate-limit toast.
         toast.dismiss("rate-limit");
         toast.error(
           `Too many requests. Try again in ${remaining} seconds.`,
@@ -61,7 +132,6 @@ axiosInstance.interceptors.response.use(
           }
         );
 
-        // Tick the countdown down and dismiss the toast when it ends.
         countdownInterval = setInterval(() => {
           remaining--;
           if (remaining <= 0) {
