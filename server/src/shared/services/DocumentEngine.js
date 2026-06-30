@@ -1,3 +1,137 @@
+// Internal piece-table representation of a document.
+// Backs DocumentEngine's edits; not exported and not used outside this module.
+class PieceTable {
+
+    constructor(text) {
+
+        // Immutable original buffer holding the initial document.
+        this.original = text;
+
+        // Append-only buffer holding every inserted fragment.
+        this.added = "";
+
+        // Ordered pieces describing the current document over the two buffers.
+        this.pieces = text.length > 0
+            ? [{ buffer: "original", start: 0, length: text.length }]
+            : [];
+
+    }
+
+    // Resolve the backing buffer string for a piece.
+    bufferFor(piece) {
+        return piece.buffer === "original" ? this.original : this.added;
+    }
+
+    // Materialize the current document into a plain string.
+    toString() {
+
+        // Concatenate the slice each piece points at.
+        let result = "";
+
+        for (const piece of this.pieces) {
+            const buffer = this.bufferFor(piece);
+            result += buffer.slice(piece.start, piece.start + piece.length);
+        }
+
+        return result;
+
+    }
+
+    // Ensure a clean piece boundary at an absolute offset and return its piece index.
+    splitAt(offset) {
+
+        // Offset zero is always a boundary at the start.
+        if (offset === 0) {
+            return 0;
+        }
+
+        // Walk the pieces accumulating their lengths until the offset is reached.
+        let consumed = 0;
+
+        for (let i = 0; i < this.pieces.length; i++) {
+
+            const piece = this.pieces[i];
+
+            // The offset lands exactly after this piece: already a clean boundary.
+            if (consumed + piece.length === offset) {
+                return i + 1;
+            }
+
+            // The offset falls inside this piece: split it into two pieces.
+            if (consumed + piece.length > offset) {
+
+                const left = offset - consumed;
+
+                const firstPart = {
+                    buffer: piece.buffer,
+                    start: piece.start,
+                    length: left,
+                };
+
+                const secondPart = {
+                    buffer: piece.buffer,
+                    start: piece.start + left,
+                    length: piece.length - left,
+                };
+
+                this.pieces.splice(i, 1, firstPart, secondPart);
+
+                return i + 1;
+
+            }
+
+            consumed += piece.length;
+
+        }
+
+        // The offset is at or beyond the end of the document.
+        return this.pieces.length;
+
+    }
+
+    // Insert text at an absolute position.
+    insert(position, text) {
+
+        // Ignore empty insertions.
+        if (text.length === 0) {
+            return;
+        }
+
+        // Append the text to the add buffer and describe it as a new piece.
+        const start = this.added.length;
+        this.added += text;
+
+        const newPiece = {
+            buffer: "added",
+            start,
+            length: text.length,
+        };
+
+        // Split at the insertion point and splice the new piece in.
+        const index = this.splitAt(position);
+        this.pieces.splice(index, 0, newPiece);
+
+    }
+
+    // Delete a range of the given length starting at an absolute position.
+    delete(position, length) {
+
+        // Ignore empty deletions.
+        if (length === 0) {
+            return;
+        }
+
+        // Establish clean boundaries at both ends of the range.
+        const startIndex = this.splitAt(position);
+        const endIndex = this.splitAt(position + length);
+
+        // Drop every piece between the two boundaries.
+        this.pieces.splice(startIndex, endIndex - startIndex);
+
+    }
+
+}
+
 // Creating the document class to update delete and inster the content of the document
 class DocumentEngine {
 
@@ -11,11 +145,10 @@ class DocumentEngine {
             throw new Error("Invalid insert position.");
         }
 
-        return (
-            document.slice(0, position) +
-            text +
-            document.slice(position)
-        );
+        // Apply the insertion through a piece table and materialize the result.
+        const table = new PieceTable(document);
+        table.insert(position, text);
+        return table.toString();
 
     }
 
@@ -37,10 +170,10 @@ class DocumentEngine {
             throw new Error("Delete range exceeds document length.");
         }
 
-        return (
-            document.slice(0, position) +
-            document.slice(position + length)
-        );
+        // Apply the deletion through a piece table and materialize the result.
+        const table = new PieceTable(document);
+        table.delete(position, length);
+        return table.toString();
 
     }
 
@@ -62,11 +195,11 @@ class DocumentEngine {
             throw new Error("Replace range exceeds document length.");
         }
 
-        return (
-            document.slice(0, position) +
-            text +
-            document.slice(position + length)
-        );
+        // Apply the replacement as a delete followed by an insert at the same position.
+        const table = new PieceTable(document);
+        table.delete(position, length);
+        table.insert(position, text);
+        return table.toString();
 
     }
 
