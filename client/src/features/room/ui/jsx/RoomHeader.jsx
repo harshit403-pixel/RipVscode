@@ -1,122 +1,69 @@
-import { Check, Copy, FileCode2, Pencil, Power, Wifi, X } from "lucide-react";
+import {
+  Copy,
+  Lock,
+  Unlock,
+  UserPlus,
+  LogOut,
+  Code,
+  Code2,
+} from "lucide-react";
 import styles from "../css/RoomPage.module.css";
 
 export default function RoomHeader({
-  roomName,
-  draftName,
-  isEditing,
-  isHost,
-  copied,
-  confirmOpen,
-  roomCode,
-  onCopy,
-  onDraftChange,
-  onStartEdit,
-  onCommitName,
-  onCancelEdit,
-  onToggleConfirm,
-  onCloseRoom,
+  roomCode = "room-7f3g2k",
+  isLocked = false,
+  onCopy = () => {},
+  onShare = () => {},
+  onLeave = () => {},
 }) {
   return (
     <header className={styles.header}>
-      <div>
+      <div className={styles.leftHeader}>
         <div className={styles.brand}>
-          <FileCode2 size={15} />
-          CodeRoom
+          <span className={styles.brandIcon}>
+            <Code2 size={20} strokeWidth={3} />
+          </span>
+          <span>RipVSCode</span>
         </div>
 
-        <div className={styles.titleRow}>
-          {isEditing ? (
-            <input
-              className={styles.titleInput}
-              value={draftName}
-              aria-label="Room name"
-              onChange={(event) => onDraftChange(event.target.value)}
-              onBlur={onCommitName}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") onCommitName();
-                if (event.key === "Escape") onCancelEdit();
-              }}
-              autoFocus
-            />
-          ) : (
-            <h1 className={styles.title}>{roomName}</h1>
-          )}
-
-          {isHost && !isEditing && (
-            <button
-              className={styles.iconButton}
-              type="button"
-              aria-label="Rename room"
-              title="Rename room"
-              onClick={onStartEdit}
-            >
-              <Pencil size={15} />
-            </button>
-          )}
-        </div>
-
-        <p className={styles.subtitle}>Single shared file with live presence</p>
-      </div>
-
-      <div className={styles.headerActions}>
-        <div className={styles.status}>
-          <span className={styles.liveDot} />
-          <Wifi size={15} />
-          Connected
-        </div>
-
-        <div className={styles.roomCode}>
-          <div>
-            <div className={styles.codeLabel}>Room code</div>
-            <div className={styles.codeValue}>{roomCode}</div>
-          </div>
+        <div className={styles.headerPill}>
+          <span>Room ID: {roomCode}</span>
           <button
-            className={`${styles.iconButton} ${copied ? styles.copied : ""}`}
-            type="button"
-            aria-label="Copy room code"
-            title="Copy room code"
+            className={styles.copyBtn}
             onClick={onCopy}
+            type="button"
+            aria-label="Copy Room ID"
+            title="Copy Room ID"
           >
-            {copied ? <Check size={15} /> : <Copy size={15} />}
+            <Copy size={14} />
           </button>
         </div>
 
-        {isHost && (
-          <div className={styles.dangerArea}>
-            <button
-              className={styles.closeButton}
-              type="button"
-              onClick={onToggleConfirm}
-            >
-              <Power size={15} />
-              Close
-            </button>
+        <div className={styles.lockBadge}>
+          {isLocked ? (
+            <>
+              <Lock size={14} />
+              <span>Locked</span>
+            </>
+          ) : (
+            <>
+              <Unlock size={14} />
+              <span>Unlocked</span>
+            </>
+          )}
+        </div>
+      </div>
 
-            {confirmOpen && (
-              <div className={styles.popover}>
-                <p>Closing the room disconnects everyone in this session.</p>
-                <div className={styles.popoverActions}>
-                  <button
-                    className={styles.ghostButton}
-                    type="button"
-                    onClick={onToggleConfirm}
-                  >
-                    <X size={14} />
-                    Cancel
-                  </button>
-                  <button
-                    className={styles.dangerButton}
-                    type="button"
-                    onClick={onCloseRoom}
-                  >
-                    Close room
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+      <div className={styles.rightHeader}>
+        <button className={styles.btnSecondary} onClick={onShare} type="button">
+          <UserPlus size={16} />
+          <span>Share Room</span>
+        </button>
+
+        <button className={styles.btnPrimary} onClick={onLeave} type="button">
+          <LogOut size={16} />
+          <span>Leave Room</span>
+        </button>
       </div>
     </header>
   );

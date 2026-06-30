@@ -6,41 +6,22 @@ import env from "./shared/config/env.config.js";
 function initializeSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin:
-        env.FRONTEND_URL,
+      origin: env.FRONTEND_URL,
       credentials: true,
     },
   });
 
-  io.on(
-    "connection",
-    (socket) => {
-      console.log(
-        "User connected:",
-        socket.id
-      );
+  io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
 
-      registerRoomEvents(
-        io,
-        socket
-      );
+    registerRoomEvents(io, socket);
 
-      registerCodeEvents(
-        io,
-        socket
-      );
+    registerCodeEvents(io, socket);
 
-      socket.on(
-        "disconnect",
-        () => {
-          console.log(
-            "Disconnected:",
-            socket.id
-          );
-        }
-      );
-    }
-  );
+    socket.on("disconnect", () => {
+      console.log("Disconnected:", socket.id);
+    });
+  });
 
   return io;
 }
