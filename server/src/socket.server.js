@@ -10,7 +10,7 @@ function initializeSocket(server) {
         env.FRONTEND_URL,
       credentials: true,
     },
-  });
+  }); 
 
   io.on(
     "connection",
