@@ -36,6 +36,38 @@ class RoomLifecycleService {
 
     }
 
+    async joinRoom(roomCode, participantId) {
+
+        // Load or create the active room for this participant.
+        const room = await this.getOrCreateRoom(roomCode);
+
+        // Track the participant inside the active room.
+        room.participants.set(participantId, true);
+
+        // Return the active room.
+        return room;
+
+    }
+
+    async leaveRoom(roomCode, participantId) {
+
+        // Look up the active room; nothing to do if it is not loaded.
+        const room = this.roomManager.get(roomCode);
+
+        if (!room) {
+            return;
+        }
+
+        // Remove the participant from the active room.
+        room.participants.delete(participantId);
+
+        // Evict the room once the last participant has left.
+        if (room.participants.size === 0) {
+            await this.unloadRoom(roomCode);
+        }
+
+    }
+
     async unloadRoom(roomCode) {
 
         const room = this.roomManager.get(roomCode);
@@ -44,9 +76,10 @@ class RoomLifecycleService {
             return;
         }
 
-        // Persist the room through the persistence service before unloading it.
-        await this.persistenceService.save(room);
+        // Flush the room only when it has unsaved edits before unloading it.
+        await this.persistenceService.saveIfDirty(room);
 
+        // Remove the room from the manager to free its memory.
         this.roomManager.remove(roomCode);
 
     }
