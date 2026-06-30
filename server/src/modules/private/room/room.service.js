@@ -1,5 +1,5 @@
 import RoomRepository from "../../../shared/dao/room.dao.js";
-import ParticipantRepository from "../../../shared/dao/participant.dao.js";
+import ParticipantDAO from "../../../shared/dao/participant.dao.js";
 
 import NotFound from "../../../shared/errors/notfound.error.js";
 import Unauthorized from "../../../shared/errors/unauthorize.error.js";
@@ -17,8 +17,8 @@ class RoomService {
     this.roomRepository =
       new RoomRepository();
 
-    this.participantRepository =
-      new ParticipantRepository();
+    this.ParticipantDAO =
+      new ParticipantDAO();
   }
 
   async getRoomByCode(
@@ -63,7 +63,7 @@ class RoomService {
         }
       );
 
-    await this.participantRepository.createParticipant(
+    await this.ParticipantDAO.createParticipant(
       {
         roomId: room._id,
         userId,
@@ -86,7 +86,7 @@ class RoomService {
       );
 
     const participant =
-      await this.participantRepository.createParticipant(
+      await this.ParticipantDAO.createParticipant(
         {
           roomId: room._id,
           displayName,
@@ -113,7 +113,7 @@ class RoomService {
       );
 
     const participants =
-      await this.participantRepository.findParticipants(
+      await this.ParticipantDAO.findParticipants(
         room._id
       );
 
@@ -136,7 +136,7 @@ class RoomService {
       );
 
     const participants =
-      await this.participantRepository.findParticipants(
+      await this.ParticipantDAO.findParticipants(
         room._id
       );
 
@@ -149,7 +149,7 @@ class RoomService {
     participantId
   ) {
     const participant =
-      await this.participantRepository.findParticipant(
+      await this.ParticipantDAO.findParticipant(
         {
           _id: participantId,
         }
@@ -161,7 +161,7 @@ class RoomService {
       );
     }
 
-    await this.participantRepository.updateParticipant(
+    await this.ParticipantDAO.updateParticipant(
       {
         _id: participantId,
       },
@@ -194,10 +194,61 @@ class RoomService {
       room._id
     );
 
-    await this.participantRepository.deleteParticipants(
+    await this.ParticipantDAO.deleteParticipants(
       room._id
     );
   }
+
+
+  async kickParticipantService(
+  roomCode,
+  hostId,
+  participantId
+) {
+  const room =
+    await this.getRoomByCode(
+      roomCode
+    );
+
+  // Only host can kick
+  if (
+    room.hostId.toString() !==
+    hostId
+  ) {
+    throw new Unauthorized(
+      "Only host can kick participants"
+    );
+  }
+
+  const participant =
+    await this.ParticipantDAO.findParticipant(
+      {
+        _id: participantId,
+        roomId: room._id,
+      }
+    );
+
+  if (!participant) {
+    throw new NotFound(
+      "Participant not found"
+    );
+  }
+
+  // Host cannot kick himself
+  if (
+    participant.role === "HOST"
+  ) {
+    throw new Unauthorized(
+      "Host cannot be removed"
+    );
+  }
+
+  await this.ParticipantDAO.deleteParticipant(
+    {
+      _id: participantId,
+    }
+  );
+}
 }
 
 export default RoomService;

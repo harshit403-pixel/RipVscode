@@ -1,5 +1,5 @@
 import NotFound from "../../../shared/errors/notfound.error.js";
-import ParticipantRepository from "../../../shared/dao/participant.dao.js";
+import ParticipantDAO from "../../../shared/dao/participant.dao.js";
 
 import {
   sanitizeParticipant,
@@ -7,8 +7,8 @@ import {
 
 class ParticipantService {
   constructor() {
-    this.participantRepository =
-      new ParticipantRepository();
+    this.ParticipantDAO =
+      new ParticipantDAO();
   }
 
   async updateParticipantService(
@@ -16,7 +16,7 @@ class ParticipantService {
     data
   ) {
     const participant =
-      await this.participantRepository.findParticipant(
+      await this.ParticipantDAO.findParticipant(
         {
           _id: participantId,
         }
@@ -55,7 +55,7 @@ class ParticipantService {
     }
 
     const updatedParticipant =
-      await this.participantRepository.updateParticipant(
+      await this.ParticipantDAO.updateParticipant(
         {
           _id: participantId,
         },

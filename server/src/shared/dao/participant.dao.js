@@ -2,7 +2,7 @@
 import Participant from "../models/participant.model.js";
 
 // Class to communicate with participants collection
-class ParticipantRepository {
+class ParticipantDAO {
   constructor() {
     this.participantModel =
       Participant;
@@ -93,4 +93,4 @@ async findParticipantByRoomAndName(
 }
 }
 
-export default ParticipantRepository;
+export default ParticipantDAO;

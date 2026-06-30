@@ -68,4 +68,12 @@ router.get(
     roomController.getParticipantsController
   )
 );
+
+router.delete(
+  "/:roomCode/participants/:participantId",
+  authMiddleware,
+  asyncHandler(
+    roomController.kickParticipantController
+  )
+);
 export default router;

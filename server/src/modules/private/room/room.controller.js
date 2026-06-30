@@ -127,6 +127,28 @@ class RoomController {
       participants
     );
   };
+
+
+  kickParticipantController =
+  async (req, res) => {
+    const { roomCode, participantId } =
+      req.params;
+
+    const userId =
+      req.user.id;
+
+    await this.roomService.kickParticipantService(
+      roomCode,
+      userId,
+      participantId
+    );
+
+    return ApiResponse(
+      res,
+      200,
+      "Participant kicked successfully"
+    );
+  };
 }
 
 export default RoomController;
