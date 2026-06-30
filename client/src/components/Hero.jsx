@@ -21,7 +21,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen overflow-x-hidden bg-[#F7F5F0]">
+    <section className="relative min-h-screen overflow-hidden bg-[#F7F5F0]">
       {/* Background Video */}
       <video
         autoPlay
