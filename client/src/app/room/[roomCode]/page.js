@@ -17,7 +17,7 @@ export default function RoomPage() {
       try {
         const res =
           await getRoom(roomCode);
-
+ 
         setRoom(res.data.data);
       } catch (err) {
         console.log(err);
