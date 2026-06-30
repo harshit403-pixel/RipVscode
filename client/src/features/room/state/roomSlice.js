@@ -41,6 +41,19 @@ const roomSlice = createSlice({
       );
     },
 
+    // Sets this client's own participant (e.g. after joining as a guest)
+    setCurrentParticipant: (state, action) => {
+      const participant = action.payload;
+      state.currentParticipant = participant;
+      const pid = participant._id || participant.id;
+      const exists = state.participants.find(
+        (p) => (p._id || p.id) === pid
+      );
+      if (!exists) {
+        state.participants.push(participant);
+      }
+    },
+
     // Updates typing indicators
     setTypingStatus: (state, action) => {
       const { participantId, isTyping } = action.payload;
@@ -58,6 +71,7 @@ export const {
   clearRoom,
   addParticipant,
   removeParticipant,
+  setCurrentParticipant,
   setTypingStatus,
 } = roomSlice.actions;
 
