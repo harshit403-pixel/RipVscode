@@ -30,6 +30,11 @@ const roomSchema = new mongoose.Schema(
       default: "",
     },
 
+    version: {
+      type: Number,
+      default: 1,
+    },
+
     isActive: {
       type: Boolean,
       default: true,

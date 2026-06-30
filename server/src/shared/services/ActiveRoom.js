@@ -7,6 +7,7 @@ class ActiveRoom {
     constructor({
         roomCode,
         document,
+        version = 1,
     }) {
 
         this.roomCode = roomCode;
@@ -19,7 +20,8 @@ class ActiveRoom {
 
         this.conflictResolver = new ConflictResolver();
 
-        this.version = 1;
+        // Restore the persisted version, defaulting to 1 for new rooms.
+        this.version = version;
 
         this.participants = new Map();
 

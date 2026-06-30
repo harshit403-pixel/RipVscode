@@ -22,13 +22,14 @@ class PersistenceService {
             throw new Error("ActiveRoom is required.");
         }
 
-        // Persist the latest in-memory document for this room.
+        // Persist the latest in-memory document and version for this room.
         await this.roomDAO.updateRoom(
             {
                 roomCode: activeRoom.roomCode,
             },
             {
                 document: activeRoom.document,
+                version: activeRoom.version,
             }
         );
 
