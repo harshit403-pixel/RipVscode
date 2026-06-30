@@ -31,6 +31,10 @@ const envSchema = z
       .string()
       .default(envsConstants.MONGO_URI),
 
+    AUTOSAVE_INTERVAL_MS: z.coerce
+      .number()
+      .default(envsConstants.AUTOSAVE_INTERVAL_MS),
+
     JWT_ACCESS_SECRET: z.string(),
 
     JWT_REFRESH_SECRET: z.string(),

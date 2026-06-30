@@ -12,12 +12,38 @@ async function startServer() {
 
   const server = http.createServer(app);
 
-  initializeSocket(server);
+  // Initialize sockets and obtain the autosave scheduler for lifecycle control.
+  const { autosaveScheduler } = initializeSocket(server);
 
   server.on("error", (err) => {
     console.error("Server Error:", err);
     process.exit(1);
   });
+
+  // Gracefully stop autosave and persist remaining dirty rooms before exiting.
+  const shutdown = async (signal) => {
+
+    // Log the shutdown signal that triggered the cleanup.
+    console.log(`Received ${signal}, shutting down gracefully...`);
+
+    // Stop scheduling further autosave cycles.
+    autosaveScheduler.stop();
+
+    // Persist any remaining dirty rooms one final time.
+    try {
+      await autosaveScheduler.flush();
+    } catch (error) {
+      console.error("Final autosave flush failed:", error.message);
+    }
+
+    // Close the HTTP server and exit the process.
+    server.close(() => process.exit(0));
+
+  };
+
+  // Register graceful shutdown handlers for termination signals.
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
 
   server.listen(env.PORT, () => {
     console.log(
