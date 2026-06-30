@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { socket } from "@/lib/socket";
 import { getRoom } from "../api/room.api";
 import { setRoom, clearRoom } from "../state/roomSlice";
+import { createDeltaFromChange } from "../lib/delta";
 
 // Coordinates the realtime collaboration session for a room:
 // loads the initial document, resolves this client's identity, and manages
@@ -28,16 +29,49 @@ export function useCollaborativeEditor(roomCode) {
   const participantIdRef = useRef(null);
   const authUserRef = useRef(authUser);
 
+  // Current document version used as the base version for outgoing deltas.
+  const versionRef = useRef(1);
+
+  // Guards against re-emitting edits that came from applying a remote delta.
+  const isApplyingRemoteRef = useRef(false);
+
+  // Disposable for the Monaco change listener.
+  const changeDisposableRef = useRef(null);
+
   // Keep the latest authenticated user available to async callbacks.
   useEffect(() => {
     authUserRef.current = authUser;
   }, [authUser]);
 
-  // Capture the Monaco instances when the editor mounts.
+  // Capture the Monaco instances and start converting local edits into deltas.
   const handleEditorMount = useCallback((editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-  }, []);
+
+    // Convert local Monaco edits into backend deltas and emit them.
+    changeDisposableRef.current = editor.onDidChangeModelContent((event) => {
+
+      // Ignore edits produced by applying a remote delta to avoid feedback loops.
+      if (isApplyingRemoteRef.current) return;
+
+      // Apply higher offsets first so earlier (lower) offsets stay valid.
+      const orderedChanges = [...event.changes].sort(
+        (a, b) => b.rangeOffset - a.rangeOffset
+      );
+
+      // Emit one delta per change, advancing the local version each time.
+      for (const change of orderedChanges) {
+        const delta = createDeltaFromChange(change, {
+          version: versionRef.current,
+          userId: authUserRef.current?.id,
+        });
+        if (!delta) continue;
+
+        socket.emit("code-change", { roomCode, delta });
+        versionRef.current += 1;
+      }
+    });
+  }, [roomCode]);
 
   // Load the room and open/clean up the realtime connection.
   useEffect(() => {
@@ -72,6 +106,9 @@ export function useCollaborativeEditor(roomCode) {
           (participant) => participant.userId === authUserRef.current?.id
         );
         participantIdRef.current = me ? me.id : null;
+
+        // Initialize the base version from the persisted room version.
+        versionRef.current = data.room.version ?? 1;
 
         // Store room state for the surrounding UI.
         dispatch(
@@ -109,6 +146,12 @@ export function useCollaborativeEditor(roomCode) {
     // Leave the room and tear down the connection on unmount.
     return () => {
       cancelled = true;
+
+      // Stop converting local edits into deltas.
+      if (changeDisposableRef.current) {
+        changeDisposableRef.current.dispose();
+        changeDisposableRef.current = null;
+      }
 
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
