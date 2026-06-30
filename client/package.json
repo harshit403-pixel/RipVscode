@@ -2,6 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,19 +10,20 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.2.11",
+    "@fontsource/inter": "^5.2.8",
     "@reduxjs/toolkit": "^2.12.0",
+    "@tailwindcss/postcss": "^4.3.2",
     "axios": "^1.18.1",
     "next": "^16.2.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-redux": "^9.3.0",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "tailwindcss": "^4.3.2"
   },
   "devDependencies": {
     "eslint": "^9",
     "eslint-config-next": "16.2.9"
-  },
-  "overrides": {
-    "postcss": "8.5.16"
   }
 }
