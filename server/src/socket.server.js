@@ -48,8 +48,7 @@ function initializeSocket(server) {
   // Initialize the Socket.IO server with CORS configuration.
   const io = new Server(server, {
     cors: {
-      origin:
-        env.FRONTEND_URL,
+      origin: env.FRONTEND_URL,
       credentials: true,
     },
   });
