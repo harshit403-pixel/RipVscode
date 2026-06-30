@@ -1,5 +1,5 @@
-import RoomRepository from "../../../shared/repositories/room.repository.js";
-import ParticipantRepository from "../../../shared/repositories/participant.repository.js";
+import RoomRepository from "../../../shared/dao/room.dao.js";
+import ParticipantRepository from "../../../shared/dao/participant.dao.js";
 import NotFound from "../../../shared/errors/notfound.error.js";
 import generateRoomCode from "../../../shared/utils/roomCode.util.js";
 import Unauthorized from "../../../shared/errors/unauthorize.error.js";

@@ -1,5 +1,5 @@
 import NotFound from "../../../shared/errors/notfound.error.js";
-import ParticipantRepository from "../../../shared/repositories/participant.repository.js";
+import ParticipantRepository from "../../../shared/dao/participant.dao.js";
 
 class ParticipantService {
   constructor() {

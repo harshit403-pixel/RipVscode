@@ -9,7 +9,7 @@ import rateLimit from 'express-rate-limit';
 import env from '../config/env.config.js';
 
 // Function to apply security middlewares
-function applySecurityMiddlewares(app) {
+function applyMainMiddlewares(app) {
 
     // Helmet for setting various HTTP headers for security
     app.use(helmet());
@@ -19,7 +19,7 @@ function applySecurityMiddlewares(app) {
 
     // CORS for enabling Cross-Origin Resource Sharing
     app.use(cors({
-        origin: env.FRONTEND_URL,
+        origin: env.FRONTEND_URL.split(",").map(url => url.trim()), // Allow multiple origins
         credentials: true
     }));
 
@@ -45,9 +45,6 @@ function applySecurityMiddlewares(app) {
     // applying URL-encoded body parser middleware
     app.use(express.urlencoded({ extended: true, limit: '2mb' })); // limit body to 2mb
 
-    // Returning the app with applied middlewares
-    return app;
-
 }
 
-export default applySecurityMiddlewares;
+export default applyMainMiddlewares;
