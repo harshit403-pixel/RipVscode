@@ -33,12 +33,24 @@ class RoomManager {
 
         // Remove the room data from the map
         this.rooms.delete(roomCode);
-        
+
     }
 
-    async loadRoom(roomCode) {}
+    async loadRoom(roomCode) {
 
-    async unloadRoom(roomCode) {}
+        if (this.has(roomCode))
+            return this.get(roomCode);
+
+        // Load from Mongo
+
+        // Create ActiveRoom
+
+        // Store inside Map
+
+        // Return it
+
+    }
+    async unloadRoom(roomCode) { }
 
 }
 

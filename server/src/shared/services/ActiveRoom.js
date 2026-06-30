@@ -8,6 +8,8 @@ class ActiveRoom {
         document,
     }) {
 
+        this.roomCode = roomCode;
+
         this.document = document;
 
         this.documentEngine = new DocumentEngine();
@@ -17,6 +19,7 @@ class ActiveRoom {
         this.version = 1;
 
         this.participants = new Map();
+
     }
 
 }
