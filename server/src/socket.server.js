@@ -53,7 +53,7 @@ function initializeSocket(server) {
       origin: env.FRONTEND_URL,
       credentials: true,
     },
-  });
+  }); 
 
 
   // Register event handlers for room and code events when a client connects.
