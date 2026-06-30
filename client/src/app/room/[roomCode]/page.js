@@ -31,8 +31,5 @@ export default function RoomPage() {
     }
   }, [roomCode, router]);
 
-  // Read the room code from the route and render the collaborative room.
-  const { roomCode } = useParams();
-
   return <RoomPage roomCode={roomCode} />;
 }
