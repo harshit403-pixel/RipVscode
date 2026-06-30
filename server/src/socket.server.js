@@ -7,6 +7,7 @@ import RoomDAO from "./shared/dao/room.dao.js";
 import RoomLifecycleService from "./shared/services/RoomLifecycleService.js";
 import RoomEditingService from "./shared/services/RoomEditingService.js";
 import PersistenceService from "./shared/services/PersistenceService.js";
+import AutosaveScheduler from "./shared/services/AutosaveScheduler.js";
 
 function initializeSocket(server) {
 
@@ -31,6 +32,17 @@ function initializeSocket(server) {
 
   // Initialize the room editing service.
   const roomEditingService = new RoomEditingService();
+
+
+  // Initialize the autosave scheduler with the shared room manager and persistence service.
+  const autosaveScheduler = new AutosaveScheduler({
+    roomManager,
+    persistenceService,
+    intervalMs: env.AUTOSAVE_INTERVAL_MS,
+  });
+
+  // Start the periodic autosave loop so dirty rooms are persisted off the edit path.
+  autosaveScheduler.start();
 
 
   // Initialize the Socket.IO server with CORS configuration.
@@ -70,7 +82,11 @@ function initializeSocket(server) {
   });
 
 
-  return io;
+  // Return the socket server and autosave scheduler for lifecycle control.
+  return {
+    io,
+    autosaveScheduler,
+  };
 }
 
 export default initializeSocket;

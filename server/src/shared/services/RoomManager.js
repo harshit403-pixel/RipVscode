@@ -36,6 +36,13 @@ class RoomManager {
 
     }
 
+    values() {
+
+        // Expose an iterator over all active rooms for background consumers (e.g. autosave)
+        return this.rooms.values();
+
+    }
+
     async loadRoom(roomCode) {
 
         if (this.has(roomCode))
