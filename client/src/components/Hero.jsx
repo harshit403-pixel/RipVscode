@@ -3,6 +3,7 @@
 import { useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import Button from "./Button";
+import { navigate } from "@/lib/navigate";
 
 export default function Hero() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen overflow-x-hidden bg-[#F7F5F0]">
+    <section className="relative min-h-screen overflow-hidden bg-[#F7F5F0]">
       {/* Background Video */}
       <video
         autoPlay
@@ -73,7 +74,12 @@ export default function Hero() {
 
           <div className=" flex items-center gap-6">
             <Button
-              onClick={handleCreateRoom}
+              onClick={() =>
+  navigate(
+    router,
+    "/signup"
+  )
+}
             >
               Create Room
             </Button>
