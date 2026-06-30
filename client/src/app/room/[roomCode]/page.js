@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import RoomPage from "@/features/room/ui/jsx/RoomPage";
 
-export default function RoomPage() {
+export default function Page() {
   const { roomCode } = useParams();
   const router = useRouter();
 
