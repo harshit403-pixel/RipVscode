@@ -3,6 +3,7 @@ import registerRoomEvents from "./sockets/room.socket.js";
 import registerCodeEvents from "./sockets/code.socket.js";
 import registerCursorEvents from "./sockets/cursor.socket.js";
 import logger from "./shared/config/logger.config.js";
+import env from "./shared/config/env.config.js";
 import RoomManager from "./shared/services/RoomManager.js";
 import RoomDAO from "./shared/dao/room.dao.js";
 import RoomLifecycleService from "./shared/services/RoomLifecycleService.js";
