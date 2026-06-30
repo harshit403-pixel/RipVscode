@@ -1,6 +1,7 @@
 function registerRoomEvents(
   io,
-  socket
+  socket,
+  services
 ) {
 socket.on(
   "join-room",
