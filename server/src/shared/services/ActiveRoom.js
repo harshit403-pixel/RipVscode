@@ -1,5 +1,6 @@
 import DocumentEngine from "./DocumentEngine.js";
 import QueueManager from "./QueueManager.js";
+import ConflictResolver from "./ConflictResolver.js";
 
 class ActiveRoom {
 
@@ -16,9 +17,14 @@ class ActiveRoom {
 
         this.queueManager = new QueueManager();
 
+        this.conflictResolver = new ConflictResolver();
+
         this.version = 1;
 
         this.participants = new Map();
+
+        // Ordered log of applied deltas used to transform concurrent edits.
+        this.history = [];
 
         // Dirty tracking flag: true when the room has in-memory edits not yet persisted.
         this.isDirty = false;

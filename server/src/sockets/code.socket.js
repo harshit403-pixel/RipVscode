@@ -18,18 +18,19 @@ function registerCodeEvents(
                         roomCode
                     );
 
-                const updatedRoom =
+                // Process the edit and obtain the applied (possibly transformed) delta.
+                const result =
                     roomEditingService.process(
                         activeRoom,
                         delta
                     );
 
+                // Broadcast the applied delta so every client converges on the same document.
                 socket.to(roomCode).emit(
                     "code-change",
                     {
-                        delta,
-                        version:
-                            updatedRoom.version,
+                        delta: result.delta,
+                        version: result.version,
                     }
                 );
 
