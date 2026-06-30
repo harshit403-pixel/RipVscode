@@ -1,35 +1,24 @@
 import express from "express";
 
-import applySecurityMiddlewares from "./shared/middlewares/security.middleware.js";
+import applyMainMiddlewares from "./shared/middlewares/index.middleware.js";
 import globalErrorHandler from "./shared/middlewares/error.middleware.js";
 
-import authRoutes from "./modules/public/auth/auth.router.js";
-import roomRoutes from "./modules/private/room/room.routes.js";
-import participantRoutes from "./modules/private/participant/participant.routes.js"
-
-const app = express();
-
-applySecurityMiddlewares(app);
-
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Server is running ",
-  });
-});
-
-app.use("/api/auth", authRoutes);
-app.use(
-  "/api/rooms",
-  roomRoutes
-);
+import indexRouter from "./shared/router/index.router.js";
 
 
-app.use(
-  "/api/participants",
-  participantRoutes
-);
+// function to create app 
+async function createApp() {
 
-app.use(globalErrorHandler);
+  const app = express();
 
-export default app;
+  applyMainMiddlewares(app);
+
+  // applying the index router
+  app.use("/api", indexRouter);
+
+  app.use(globalErrorHandler);
+
+  return app;
+
+}
+export default createApp;

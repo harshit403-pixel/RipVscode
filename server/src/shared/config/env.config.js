@@ -4,11 +4,7 @@ import z from "zod/v4";
 import envsConstants from "../constants/env.constants.js";
 
 // Load .env file
-config({
-  path: process.cwd() + "/.env",
-  debug: process.env.NODE_ENV === "development",
-  quiet: process.env.NODE_ENV === "production",
-});
+config();
 
 // Environment schema
 const envSchema = z
@@ -54,7 +50,7 @@ const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
   console.error(
-    "❌ Invalid environment variables:"
+    "Invalid environment variables:"
   );
   console.error(
     parsedEnv.error.flatten().fieldErrors

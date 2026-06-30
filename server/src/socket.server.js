@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
-import registerRoomEvents from "./room.socket.js";
-import registerCodeEvents from "./code.socket.js";
-import env from "../shared/config/env.config.js";
+import registerRoomEvents from "./sockets/room.socket.js";
+import registerCodeEvents from "./sockets/code.socket.js";
+import env from "./shared/config/env.config.js";
 
 function initializeSocket(server) {
   const io = new Server(server, {

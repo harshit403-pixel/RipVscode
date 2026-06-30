@@ -4,8 +4,8 @@ import {
   generateRefreshToken,
 } from "../../../shared/utils/token.util.js";
 
-import UserRepository from "../../../shared/repositories/user.repository.js";
-import SessionRepository from "../../../shared/repositories/session.repository.js";
+import UserRepository from "../../../shared/dao/user.dao.js";
+import SessionRepository from "../../../shared/dao/session.dao.js";
 
 import { sanitizeUser } from "../../../shared/utils/sanitizer.util.js";
 
