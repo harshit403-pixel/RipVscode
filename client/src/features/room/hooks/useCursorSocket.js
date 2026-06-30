@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { socket } from "@/lib/socket";
 
-const useCursorSocket = () => {
+const useCursorSocket = (roomCode) => {
   // In-memory map to store remote cursors: { userId: offset }
   const remoteCursors = useRef({});
   useEffect(() => {
