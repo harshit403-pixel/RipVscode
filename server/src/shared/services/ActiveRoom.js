@@ -1,3 +1,6 @@
+import DocumentEngine from "./DocumentEngine.js";
+import QueueManager from "./QueueManager.js";
+
 class ActiveRoom {
 
     constructor({
@@ -5,19 +8,15 @@ class ActiveRoom {
         document,
     }) {
 
-        this.roomCode = roomCode;
+        this.document = document;
 
-        this.documentEngine =
-            new DocumentEngine(document);
+        this.documentEngine = new DocumentEngine();
 
-        this.queueManager =
-            new QueueManager();
+        this.queueManager = new QueueManager();
 
         this.version = 1;
 
-        this.participants =
-            new Map();
-
+        this.participants = new Map();
     }
 
 }
