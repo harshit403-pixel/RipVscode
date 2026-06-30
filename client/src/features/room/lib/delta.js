@@ -43,3 +43,25 @@ export const createDeltaFromChange = (change, { version, userId }) => {
     text,
   };
 };
+
+// Convert a backend delta into a single Monaco edit operation against a model.
+// The range [position, position + length] is replaced by the delta text, which
+// uniformly expresses insert (length 0), delete (empty text) and replace.
+export const deltaToMonacoOperation = (delta, model) => {
+
+  // Translate the absolute offsets into Monaco positions.
+  const start = model.getPositionAt(delta.position);
+  const end = model.getPositionAt(delta.position + (delta.length || 0));
+
+  // Describe the edit as a range replacement.
+  return {
+    range: {
+      startLineNumber: start.lineNumber,
+      startColumn: start.column,
+      endLineNumber: end.lineNumber,
+      endColumn: end.column,
+    },
+    text: delta.text || "",
+    forceMoveMarkers: true,
+  };
+};

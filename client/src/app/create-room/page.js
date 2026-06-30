@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRoom } from "@/features/room/api/room.api";
+import ProtectedRoute from "@/features/auth/ui/jsx/ProtectedRoute";
 
 export default function CreateRoomPage() {
   const router = useRouter();
@@ -52,61 +53,63 @@ export default function CreateRoomPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F7F5F0]">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-lg rounded-[30px] bg-white p-10 shadow-lg"
-      >
-        <h1
-          className="mb-8 text-6xl"
-          style={{
-            fontFamily:
-              "Cormorant Garamond",
-          }}
+    <ProtectedRoute>
+      <div className="flex min-h-screen items-center justify-center bg-[#F7F5F0]">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-lg rounded-[30px] bg-white p-10 shadow-lg"
         >
-          Create Room
-        </h1>
+          <h1
+            className="mb-8 text-6xl"
+            style={{
+              fontFamily:
+                "Cormorant Garamond",
+            }}
+          >
+            Create Room
+          </h1>
 
-        <input
-          placeholder="Room Name"
-          value={roomName}
-          onChange={(e) =>
-            setRoomName(
-              e.target.value
-            )
-          }
-          className="
-            w-full
-            rounded-2xl
-            border
-            border-gray-200
-            px-5
-            py-4
-            outline-none
-          "
-        />
+          <input
+            placeholder="Room Name"
+            value={roomName}
+            onChange={(e) =>
+              setRoomName(
+                e.target.value
+              )
+            }
+            className="
+              w-full
+              rounded-2xl
+              border
+              border-gray-200
+              px-5
+              py-4
+              outline-none
+            "
+          />
 
-        {error && (
-          <p className="mt-4 text-red-500">
-            {error}
-          </p>
-        )}
+          {error && (
+            <p className="mt-4 text-red-500">
+              {error}
+            </p>
+          )}
 
-        <button
-          className="
-            mt-6
-            w-full
-            rounded-full
-            bg-black
-            py-4
-            text-white
-          "
-        >
-          {loading
-            ? "Creating..."
-            : "Create Room"}
-        </button>
-      </form>
-    </div>
+          <button
+            className="
+              mt-6
+              w-full
+              rounded-full
+              bg-black
+              py-4
+              text-white
+            "
+          >
+            {loading
+              ? "Creating..."
+              : "Create Room"}
+          </button>
+        </form>
+      </div>
+    </ProtectedRoute>
   );
 }

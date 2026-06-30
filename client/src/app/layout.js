@@ -17,9 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "CodeRoom",
-  description:
-    "Real-time collaborative code editor",
+  title: "RipVSCode",
+  description: "Real-time collaborative code editor",
 };
 
 export default function RootLayout({

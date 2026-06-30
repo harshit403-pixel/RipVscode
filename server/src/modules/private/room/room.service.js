@@ -112,6 +112,13 @@ class RoomService {
         roomCode
       );
 
+    // Reject rooms the host has closed so their link stops working.
+    if (!room.isActive) {
+      throw new NotFound(
+        "Room is closed"
+      );
+    }
+
     const participants =
       await this.ParticipantDAO.findParticipants(
         room._id
