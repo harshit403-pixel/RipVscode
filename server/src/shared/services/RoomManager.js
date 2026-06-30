@@ -54,4 +54,4 @@ class RoomManager {
 
 }
 
-export default new RoomManager();
+export default RoomManager;

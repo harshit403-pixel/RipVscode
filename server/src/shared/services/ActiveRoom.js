@@ -20,6 +20,15 @@ class ActiveRoom {
 
         this.participants = new Map();
 
+        // Dirty tracking flag: true when the room has in-memory edits not yet persisted.
+        this.isDirty = false;
+
+        // Timestamp of the last applied edit (null until the first edit).
+        this.lastModifiedAt = null;
+
+        // Timestamp of the last successful persistence (null until first save).
+        this.lastSavedAt = null;
+
     }
 
 }

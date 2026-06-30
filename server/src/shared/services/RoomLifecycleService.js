@@ -6,9 +6,11 @@ class RoomLifecycleService {
     constructor({
         roomManager,
         roomDAO,
+        persistenceService,
     }) {
         this.roomManager = roomManager;
         this.roomDAO = roomDAO;
+        this.persistenceService = persistenceService;
     }
 
     async getOrCreateRoom(roomCode) {
@@ -42,9 +44,8 @@ class RoomLifecycleService {
             return;
         }
 
-        await this.roomDAO.updateRoom(roomCode, {
-            document: room.document,
-        });
+        // Persist the room through the persistence service before unloading it.
+        await this.persistenceService.save(room);
 
         this.roomManager.remove(roomCode);
 

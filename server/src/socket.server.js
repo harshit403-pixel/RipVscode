@@ -2,20 +2,30 @@ import { Server } from "socket.io";
 import registerRoomEvents from "./sockets/room.socket.js";
 import registerCodeEvents from "./sockets/code.socket.js";
 import env from "./shared/config/env.config.js";
-import RoomManager from "./shared/managers/RoomManager.js";
+import RoomManager from "./shared/services/RoomManager.js";
 import RoomDAO from "./shared/dao/room.dao.js";
 import RoomLifecycleService from "./shared/services/RoomLifecycleService.js";
 import RoomEditingService from "./shared/services/RoomEditingService.js";
+import PersistenceService from "./shared/services/PersistenceService.js";
 
 function initializeSocket(server) {
 
   // Initialize the room manager and services.
   const roomManager = new RoomManager();
 
-  // Initialize the room lifecycle service with the room manager and repository.
+  // Initialize a single shared room dao instance to avoid duplicate connections to the data layer.
+  const roomDAO = new RoomDAO();
+
+  // Initialize the persistence service with the shared room dao.
+  const persistenceService = new PersistenceService({
+    roomDAO,
+  });
+
+  // Initialize the room lifecycle service with the room manager, shared dao and persistence service.
   const roomLifecycleService = new RoomLifecycleService({
     roomManager,
-    roomDAO: new RoomDAO(),
+    roomDAO,
+    persistenceService,
   });
 
 

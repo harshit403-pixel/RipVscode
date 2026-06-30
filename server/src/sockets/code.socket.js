@@ -14,7 +14,7 @@ function registerCodeEvents(
             try {
 
                 const activeRoom =
-                    await roomLifecycleService.getRoom(
+                    await roomLifecycleService.getOrCreateRoom(
                         roomCode
                     );
 

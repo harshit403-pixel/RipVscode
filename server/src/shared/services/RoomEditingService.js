@@ -38,6 +38,12 @@ class RoomEditingService {
 
         }
 
+        // Mark the room as dirty so a later persistence cycle will save it.
+        activeRoom.isDirty = true;
+
+        // Record the time of the latest in-memory modification.
+        activeRoom.lastModifiedAt = Date.now();
+
         // Return the updated room state.
         return activeRoom;
 
