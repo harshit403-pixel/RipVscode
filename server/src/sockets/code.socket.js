@@ -35,6 +35,22 @@ function registerCodeEvents(
 
             } catch (error) {
 
+                // Resync the sender with the latest version when the delta is stale.
+                if (error.code === "STALE_DELTA") {
+
+                    socket.emit(
+                        "sync-required",
+                        {
+                            version: error.currentVersion,
+                            document: error.currentDocument,
+                        }
+                    );
+
+                    return;
+
+                }
+
+                // Report any other editor error back to the sender.
                 socket.emit(
                     "editor-error",
                     {

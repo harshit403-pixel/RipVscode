@@ -15,6 +15,20 @@ class RoomEditingService {
             throw new Error("Delta is required.");
         }
 
+        // Validate the delta carries a numeric base version.
+        if (typeof delta.version !== "number") {
+            throw new Error("Delta version is required.");
+        }
+
+        // Reject stale deltas whose base version no longer matches the document.
+        if (delta.version !== activeRoom.version) {
+            const staleError = new Error("Stale delta: document version mismatch.");
+            staleError.code = "STALE_DELTA";
+            staleError.currentVersion = activeRoom.version;
+            staleError.currentDocument = activeRoom.document;
+            throw staleError;
+        }
+
         // Get room utilities.
         const { queueManager, documentEngine } = activeRoom;
 
