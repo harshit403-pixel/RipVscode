@@ -2,6 +2,7 @@ import { Server } from "socket.io";
 import registerRoomEvents from "./sockets/room.socket.js";
 import registerCodeEvents from "./sockets/code.socket.js";
 import env from "./shared/config/env.config.js";
+import logger from "./shared/config/logger.config.js";
 import RoomManager from "./shared/services/RoomManager.js";
 import RoomDAO from "./shared/dao/room.dao.js";
 import RoomLifecycleService from "./shared/services/RoomLifecycleService.js";
@@ -39,6 +40,7 @@ function initializeSocket(server) {
     roomManager,
     persistenceService,
     intervalMs: env.AUTOSAVE_INTERVAL_MS,
+    logger,
   });
 
   // Start the periodic autosave loop so dirty rooms are persisted off the edit path.

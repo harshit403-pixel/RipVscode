@@ -3,6 +3,9 @@
 // Delegates document mutation to DocumentEngine and conflict resolution to ConflictResolver.
 // Does NOT handle sockets or database persistence.
 
+// Maximum number of applied deltas retained per room for conflict resolution.
+const MAX_HISTORY = 1000;
+
 class RoomEditingService {
 
     process(activeRoom, delta) {
@@ -37,6 +40,20 @@ class RoomEditingService {
         let effectiveDelta = delta;
 
         if (delta.version < activeRoom.version) {
+
+            // Determine the oldest base version still covered by the retained history.
+            const oldestRetained = activeRoom.history.length > 0
+                ? activeRoom.history[0].version
+                : activeRoom.version;
+
+            // Reject deltas older than the history window; the client must resync.
+            if (delta.version < oldestRetained) {
+                const staleError = new Error("Stale delta: outside conflict-resolution window.");
+                staleError.code = "STALE_DELTA";
+                staleError.currentVersion = activeRoom.version;
+                staleError.currentDocument = activeRoom.document;
+                throw staleError;
+            }
 
             // Collect every delta applied at or after the incoming base version.
             const concurrentDeltas = activeRoom.history
@@ -75,6 +92,11 @@ class RoomEditingService {
             // Increment the document version after every successful edit.
             activeRoom.version++;
 
+        }
+
+        // Bound the history to cap per-room memory usage.
+        if (activeRoom.history.length > MAX_HISTORY) {
+            activeRoom.history.splice(0, activeRoom.history.length - MAX_HISTORY);
         }
 
         // Mark the room as dirty so a later persistence cycle will save it.

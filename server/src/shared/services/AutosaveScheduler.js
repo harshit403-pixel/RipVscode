@@ -13,6 +13,9 @@ class AutosaveScheduler {
         // Interval in milliseconds between two autosave cycles.
         intervalMs,
 
+        // Optional logger; falls back to the console when not provided.
+        logger,
+
     }) {
 
         // Storing the room manager for active room lookups.
@@ -20,6 +23,9 @@ class AutosaveScheduler {
 
         // Storing the persistence service for database persistence.
         this.persistenceService = persistenceService;
+
+        // Storing the logger used for autosave diagnostics.
+        this.logger = logger || console;
 
         // Reject non-positive intervals so a misconfigured scheduler fails fast.
         if (!Number.isFinite(intervalMs) || intervalMs <= 0) {
@@ -88,13 +94,13 @@ class AutosaveScheduler {
 
             // Report how many rooms were persisted in this cycle.
             if (savedCount > 0) {
-                console.log(`[autosave] Persisted ${savedCount} dirty room(s).`);
+                this.logger.info(`[autosave] Persisted ${savedCount} dirty room(s).`);
             }
 
         } catch (error) {
 
             // Log the failure without crashing the scheduler so future cycles continue.
-            console.error("[autosave] Cycle failed:", error.message);
+            this.logger.error(`[autosave] Cycle failed: ${error.message}`);
 
         } finally {
 

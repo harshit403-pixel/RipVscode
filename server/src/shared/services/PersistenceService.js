@@ -70,25 +70,22 @@ class PersistenceService {
             throw new Error("Active rooms collection is required.");
         }
 
-        // Track how many rooms were actually persisted.
-        let savedCount = 0;
+        // Select only the rooms that have unsaved edits.
+        const dirtyRooms = [];
 
-        // Iterate over each active room and persist only the dirty ones.
         for (const activeRoom of activeRooms) {
-
-            // Skip rooms that have no unsaved edits.
-            if (!activeRoom.isDirty) {
-                continue;
+            if (activeRoom.isDirty) {
+                dirtyRooms.push(activeRoom);
             }
-
-            // Persist the dirty room and count it.
-            await this.save(activeRoom);
-            savedCount++;
-
         }
 
-        // Return the number of rooms persisted.
-        return savedCount;
+        // Persist all dirty rooms concurrently, isolating per-room failures.
+        const results = await Promise.allSettled(
+            dirtyRooms.map((activeRoom) => this.save(activeRoom))
+        );
+
+        // Return the number of rooms persisted successfully.
+        return results.filter((result) => result.status === "fulfilled").length;
 
     }
 
