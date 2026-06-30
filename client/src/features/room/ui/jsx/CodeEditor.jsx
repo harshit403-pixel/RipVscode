@@ -15,7 +15,7 @@ const EDITOR_OPTIONS = {
   renderWhitespace: "selection",
 };
 
-const CodeEditor = ({ initialValue = "" }) => {
+const CodeEditor = ({ initialValue = "", onEditorMount }) => {
 
   // Hold references to the editor and monaco instances for later collaboration wiring.
   const editorRef = useRef(null);
@@ -25,6 +25,11 @@ const CodeEditor = ({ initialValue = "" }) => {
   const handleMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
+
+    // Hand the instances to the collaboration layer when provided.
+    if (onEditorMount) {
+      onEditorMount(editor, monaco);
+    }
   };
 
   // Release editor references on unmount; the Editor component disposes the instance itself.
