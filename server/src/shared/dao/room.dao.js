@@ -2,7 +2,7 @@
 import Room from "../models/room.model.js";
 
 // Class to communicate with rooms collection
-class RoomRepository {
+class RoomDAO {
   constructor() {
     this.roomModel = Room;
   }
@@ -48,13 +48,6 @@ class RoomRepository {
       }
     );
   }
-//   find room to join
-  async findRoomByCode(roomCode) {
-  return this.roomModel.findOne({
-    roomCode,
-    isActive: true,
-  });
-}
 }
 
-export default RoomRepository;
+export default RoomDAO;

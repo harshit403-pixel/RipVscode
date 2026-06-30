@@ -5,7 +5,8 @@ const envsConstants = {
     LOG_LEVEL: 'info',
     API_LIMIT: 100,
     FRONTEND_URL: 'http://localhost:3000',
-    MONGO_URI: 'mongodb://localhost:27017/glpddp'
+    MONGO_URI: 'mongodb://localhost:27017/glpddp',
+    AUTOSAVE_INTERVAL_MS: 5000
 }
 
 export default envsConstants;
