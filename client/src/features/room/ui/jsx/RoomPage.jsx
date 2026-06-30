@@ -7,10 +7,14 @@ import ParticipantsList from "./ParticipantsList";
 import RoomHeader from "./RoomHeader";
 import ShareModal from "./ShareModal";
 import { useShareRoom } from "../../hooks/useShareRoom";
+import { useCollaborativeEditor } from "../../hooks/useCollaborativeEditor";
 import { Users } from "lucide-react";
 
-export default function RoomPage() {
-  const roomCode = "room-7f3g2k";
+export default function RoomPage({ roomCode }) {
+
+  // Establish the realtime collaboration session for this room.
+  const { document, handleEditorMount } = useCollaborativeEditor(roomCode);
+
   const {
     isShareOpen,
     isCopied,
@@ -31,7 +35,10 @@ export default function RoomPage() {
 
       {/* Main Grid Area */}
       <div className={styles.body}>
-        <CodeEditorPanel />
+        <CodeEditorPanel
+          initialValue={document}
+          onEditorMount={handleEditorMount}
+        />
         <ParticipantsList roomCode={roomCode} isLocked={false} />
       </div>
 
