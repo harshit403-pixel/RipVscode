@@ -77,9 +77,9 @@ class RoomEditingService {
             // Capture the version this edit is applied at for future transforms.
             const appliedAtVersion = activeRoom.version;
 
-            // Apply the edit to the current document.
-            activeRoom.document = documentEngine.applyDelta(
-                activeRoom.document,
+            // Apply the edit directly to the document's piece tree.
+            documentEngine.applyDelta(
+                activeRoom.documentTree,
                 pendingDelta
             );
 

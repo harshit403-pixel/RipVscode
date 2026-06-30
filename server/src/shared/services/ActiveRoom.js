@@ -1,6 +1,7 @@
 import DocumentEngine from "./DocumentEngine.js";
 import QueueManager from "./QueueManager.js";
 import ConflictResolver from "./ConflictResolver.js";
+import PieceTree from "./PieceTree.js";
 
 class ActiveRoom {
 
@@ -12,6 +13,7 @@ class ActiveRoom {
 
         this.roomCode = roomCode;
 
+        // Build the authoritative piece tree from the initial document.
         this.document = document;
 
         this.documentEngine = new DocumentEngine();
@@ -37,6 +39,16 @@ class ActiveRoom {
         // Timestamp of the last successful persistence (null until first save).
         this.lastSavedAt = null;
 
+    }
+
+    // Materialize the document as a string from the piece tree.
+    get document() {
+        return this.documentTree.toString();
+    }
+
+    // Rebuild the authoritative piece tree from a string.
+    set document(value) {
+        this.documentTree = new PieceTree(value || "");
     }
 
 }
