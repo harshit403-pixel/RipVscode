@@ -21,6 +21,7 @@ export const sanitizeRoom = (
     roomCode: room.roomCode,
     hostId: room.hostId,
     document: room.document,
+    version: room.version,
     isActive: room.isActive,
     createdAt: room.createdAt,
     updatedAt: room.updatedAt,

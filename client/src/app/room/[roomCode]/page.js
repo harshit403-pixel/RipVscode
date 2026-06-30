@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getRoom } from "@/features/room/api/room.api";
+import { useParams } from "next/navigation";
+import RoomPage from "@/features/room/ui/jsx/RoomPage";
 
 export default function RoomPage() {
   const { roomCode } = useParams();
@@ -32,44 +31,8 @@ export default function RoomPage() {
     }
   }, [roomCode, router]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // Read the room code from the route and render the collaborative room.
+  const { roomCode } = useParams();
 
-  if (!room) {
-    return (
-      <div>
-        Room not found
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-10">
-      <h1 className="text-5xl">
-        {room.room.roomName}
-      </h1>
-
-      <p className="mt-4">
-        Room Code:{" "}
-        {room.room.roomCode}
-      </p>
-
-      <h2 className="mt-10 text-3xl">
-        Participants
-      </h2>
-
-      <ul className="mt-4">
-        {room.participants.map(
-          (participant) => (
-            <li key={participant.id}>
-              {
-                participant.displayName
-              }
-            </li>
-          )
-        )}
-      </ul>
-    </div>
-  );
+  return <RoomPage roomCode={roomCode} />;
 }
